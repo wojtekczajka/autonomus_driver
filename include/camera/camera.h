@@ -7,7 +7,7 @@
 
 class Camera {
 public:
-    Camera();
+    Camera(Logger& logger);
     ~Camera();
 
     void setCameraConfig();
@@ -21,5 +21,5 @@ private:
     int fpsCounter;
     std::chrono::time_point<std::chrono::steady_clock> fpsStartTime;
     cv::Mat currentFrame;  // Member variable to store the current frame
-    Logger logger;
+    Logger& logger;
 };

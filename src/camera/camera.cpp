@@ -5,7 +5,10 @@
 #include "common/config_parser.h"
 #include "common/logger.h"
 
-Camera::Camera() : cap(cv::VideoCapture(0)), fpsCounter(0), fpsStartTime(std::chrono::steady_clock::now()), logger(Logger("/dev/null")) {
+Camera::Camera(Logger& logger) : cap(cv::VideoCapture(0)),
+                                 fpsCounter(0),
+                                 fpsStartTime(std::chrono::steady_clock::now()),
+                                 logger(logger) {
     if (!isOpened()) {
         logger.error("COULDN'T CAPTURE VIDEO FROM CAMERA");
     }
@@ -27,10 +30,10 @@ void Camera::setCameraConfig() {
 
     cap.set(cv::CAP_PROP_FRAME_WIDTH, frameWidth);
     logger.info(fmt::format("VIDEO CAPTURE FRAME WIDTH SET TO: {}", frameWidth));
-    
+
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, frameHeihgt);
     logger.info(fmt::format("VIDEO CAPTURE FRAME HEIGHT SET TO: {}", frameHeihgt));
-    
+
     cap.set(cv::CAP_PROP_FPS, propFPS);
     logger.info(fmt::format("VIDEO CAPTURE PROP FPS SET TO: {}", propFPS));
 }

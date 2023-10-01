@@ -13,6 +13,7 @@ add_executable(main
     src/common/logger.cpp
     src/common/config_parser.cpp
     src/camera/camera.cpp
+    src/steering_control/steering_control.cpp
 )
 
 target_include_directories(main PRIVATE
