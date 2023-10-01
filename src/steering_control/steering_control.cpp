@@ -1,14 +1,35 @@
 #include "steering_control/steering_control.h"
+#include "common/config_parser.h"
 
-SteeringControl::SteeringControl(const std::string& scriptPath, Logger& logger) : scriptPath(scriptPath),
-                                                                                  logger(logger) {}
+SteeringControl::SteeringControl(Logger& logger) 
+    : logger(logger), curl(curl_easy_init()), headers(nullptr) {
+    if (!curl) {
+        logger.error("Failed to initialize cURL.");
+    }
+    ConfigParser configParser("curl_config.txt");
+    url = configParser.getValue<std::string>("URL", "http://localhost:8000/control/");
+    logger.info(fmt::format("STEERING SERVICE URL: {}", url));
+
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+}
+
+SteeringControl::~SteeringControl() {
+    if (curl) {
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+    }
+}
 
 bool SteeringControl::start() {
-    return executeCommand("start");
+    return executeCurl("start");
 }
 
 bool SteeringControl::stop() {
-    return executeCommand("stop");
+    return executeCurl("stop");
 }
 
 bool SteeringControl::turnLeft(int value) {
@@ -16,7 +37,7 @@ bool SteeringControl::turnLeft(int value) {
         logInvalidValue("turnLeft", value);
         return false;
     }
-    return executeCommand("turn_left --value " + std::to_string(value));
+    return executeCurl("turn_left", value);
 }
 
 bool SteeringControl::turnRight(int value) {
@@ -24,11 +45,11 @@ bool SteeringControl::turnRight(int value) {
         logInvalidValue("turnRight", value);
         return false;
     }
-    return executeCommand("turn_right --value " + std::to_string(value));
+    return executeCurl("turn_right", value);
 }
 
 bool SteeringControl::center() {
-    return executeCommand("center");
+    return executeCurl("center");
 }
 
 bool SteeringControl::driveForward(int value) {
@@ -36,7 +57,7 @@ bool SteeringControl::driveForward(int value) {
         logInvalidValue("driveForward", value);
         return false;
     }
-    return executeCommand("drive_forward --value " + std::to_string(value));
+    return executeCurl("drive_forward", value);
 }
 
 bool SteeringControl::driveBackward(int value) {
@@ -44,31 +65,44 @@ bool SteeringControl::driveBackward(int value) {
         logInvalidValue("driveBackward", value);
         return false;
     }
-    return executeCommand("drive_backward --value " + std::to_string(value));
+    return executeCurl("drive_backward", value);
 }
 
-bool SteeringControl::executeCommand(const std::string& command) const {
-    std::string fullCommand = ". /home/ubuntu/git-repos/Steering-for-PiRacer-Standard/venv/bin/activate && python3 " + scriptPath + " " + command;
-
-    auto startTime = std::chrono::high_resolution_clock::now();
-    int result = system(fullCommand.c_str());
-    auto endTime = std::chrono::high_resolution_clock::now();
-
-    auto executionTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-
-    if (result == 0) {
-        logger.info("SCRIPT EXCECUTED ACTION TIME FOR " + command + ": " + std::to_string(executionTime) + " ms");
-    } else {
-        logger.error("FAILED TO EXCECUTED ACTION: " + command + ": " + std::to_string(executionTime) + " ms");
-    }
-
-    return (result == 0);
-}
-
-bool SteeringControl::isValidValue(int value) const {
+bool SteeringControl::isValidValue(const int& value) const {
     return (value >= 0 && value <= 100);
 }
 
 void SteeringControl::logInvalidValue(const std::string& action, const int& value) const {
     logger.error("Invalid value for " + action + ": " + std::to_string(value));
+}
+
+bool SteeringControl::executeCurl(const std::string& action, int value) {
+    if (!curl) {
+        logger.error("cURL handle not initialized.");
+        return false;
+    }
+
+    std::string postFields = "{\"action\":\"" + action + "\",\"value\":" + std::to_string(value) + "}";
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
+
+    std::string response_data;
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+
+    CURLcode res = curl_easy_perform(curl);
+
+    if (res == CURLE_OK) {
+        logger.info("HTTP POST REQUEST SUCCESSFUL FOR " + action);
+        logger.info("Response Data: " + response_data);
+        return true;
+    } else {
+        logger.error("HTTP POST request failed for " + action + ": " + curl_easy_strerror(res));
+        return false;
+    }
+}
+
+size_t SteeringControl::writeCallback(void* contents, size_t size, size_t nmemb,  std::string* output) {
+    size_t total_size = size * nmemb;
+    std::string* response = output;
+    response->append(static_cast<char*>(contents), total_size);
+    return total_size;
 }
