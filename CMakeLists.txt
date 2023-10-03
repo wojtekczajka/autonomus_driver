@@ -19,14 +19,9 @@ add_executable(autonomus_driver
     src/road_line_detector/road_line_detector.cpp
 )
 
-add_executable(linesTest
-    src/linesTest.cpp
-)
 target_link_libraries(linesTest ${OpenCV_LIBS})
 
 target_include_directories(autonomus_driver PRIVATE
     include     # Include the "include" directory
     src         # Include the "src" directory (if needed)
 )
-
-target_link_libraries(autonomus_driver ${OpenCV_LIBS} spdlog::spdlog curl)
