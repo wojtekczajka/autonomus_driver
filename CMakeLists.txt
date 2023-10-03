@@ -10,17 +10,23 @@ find_package(CURL REQUIRED)
 file(COPY "src/camera/camera_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY "src/steering_control/curl_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
 
-add_executable(main
+add_executable(autonomus_driver
     src/main.cpp
     src/common/logger.cpp
     src/common/config_parser.cpp
     src/camera/camera.cpp
     src/steering_control/steering_control.cpp
+    src/road_line_detector/road_line_detector.cpp
 )
 
-target_include_directories(main PRIVATE
+add_executable(linesTest
+    src/linesTest.cpp
+)
+target_link_libraries(linesTest ${OpenCV_LIBS})
+
+target_include_directories(autonomus_driver PRIVATE
     include     # Include the "include" directory
     src         # Include the "src" directory (if needed)
 )
 
-target_link_libraries(main ${OpenCV_LIBS} spdlog::spdlog curl)
+target_link_libraries(autonomus_driver ${OpenCV_LIBS} spdlog::spdlog curl)
