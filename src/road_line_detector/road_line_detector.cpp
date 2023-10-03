@@ -4,19 +4,35 @@ RoadLineDetector::RoadLineDetector() {}
 
 RoadLineDetector::~RoadLineDetector() {}
 
+std::pair<cv::Point2f, cv::Point2f> vectorToLinePoints(const cv::Vec4f& vector, double min_y, double max_y) {
+    float vx = vector[0];
+    float vy = vector[1];
+    float x0 = vector[2];
+    float y0 = vector[3];
+
+    float x1 = x0 + (min_y - y0) * vx / vy;
+    float x2 = x0 + (max_y - y0) * vx / vy;
+
+    cv::Point2f startPoint(x1, min_y);
+    cv::Point2f endPoint(x2, max_y);
+
+    return std::make_pair(startPoint, endPoint);
+}
+
 void RoadLineDetector::processFrame(const cv::Mat& frame) {
     cv::Mat processedFrame;
     std::vector<cv::Vec4i> detectedLines;
     cv::imshow("frame", frame);
     cv::waitKey(0);
     cv::Mat greyscaleFrame = convertFrameToGrayscale(frame);
+    greyscaleFrame = cropRoiFromFrame(greyscaleFrame);
     cv::Mat frameWithLines = greyscaleFrame;
     cv::Mat frameWithLinesResult = greyscaleFrame;
-    cv::medianBlur( greyscaleFrame, greyscaleFrame, 23);
+    cv::medianBlur( greyscaleFrame, greyscaleFrame, 15);
     cv::Canny(greyscaleFrame, processedFrame, 45, 125, 3);
     cv::imshow("frame after canny", processedFrame);
     cv::waitKey(0);
-    processedFrame = cropRoiFromFrame(processedFrame);
+    // processedFrame = cropRoiFromFrame(processedFrame);
     cv:imshow("cropped frame", processedFrame);
     cv::waitKey(0);
     cv::HoughLinesP(processedFrame, detectedLines, 6, CV_PI / 60, 110, 30, 10);
@@ -60,13 +76,11 @@ void RoadLineDetector::processFrame(const cv::Mat& frame) {
     cv::imshow("left fit and right fit", frame);
     cv::waitKey(0);
 
-    float vx = left_line_params[0];
-    float vy = left_line_params[1];
-    float x0 = left_line_params[2];
-    float y0 = left_line_params[3];
-    float x1 = x0 + (min_y - y0) * vx / vy;
-    float x2 = x0 + (max_y - y0) * vx / vy;
-    cv::line(frame,  cv::Point(x1, min_y), cv::Point(x2, max_y), cv::Scalar(255, 0, 0), 2);
+    std::pair<cv::Point2f, cv::Point2f> leftLineinePoints = vectorToLinePoints(left_line_params, min_y, max_y);
+    std::pair<cv::Point2f, cv::Point2f> rightLineinePoints = vectorToLinePoints(right_line_params, min_y, max_y);
+
+    cv::line(frame,  leftLineinePoints.first, leftLineinePoints.second, cv::Scalar(255, 0, 0), 2);
+    cv::line(frame,  rightLineinePoints.first, rightLineinePoints.second, cv::Scalar(255, 0, 0), 2);
     cv::imshow("line detector result", frame);
     cv::waitKey(0);
 }
@@ -78,33 +92,9 @@ cv::Mat RoadLineDetector::convertFrameToGrayscale(const cv::Mat& frame) {
 }
 
 cv::Mat RoadLineDetector::cropRoiFromFrame(const cv::Mat& frame) {
-    int width = frame.cols;
-    int height = frame.rows;
-
-    cv::Mat mask = cv::Mat::zeros(frame.size(), CV_8UC1);
-    std::vector<cv::Point> triangleVertices;
-    triangleVertices.push_back(cv::Point(0, height));      
-    triangleVertices.push_back(cv::Point(width / 2, 0));   
-    triangleVertices.push_back(cv::Point(width, height));  
-
-    cv::fillPoly(mask, std::vector<std::vector<cv::Point>>(1, triangleVertices), cv::Scalar(255));
-    int rectHeight = height / 2;
-    cv::Rect topRect(0, 0, width, rectHeight);
-
-    // Fill the rectangular region in the mask
-    cv::rectangle(mask, topRect, cv::Scalar(0), -1);  // -1 indicates filled rectangle
-
-    // rectHeight = height;
-    // int rectWidth = width / 4;            // 1/4 of the frame width
-    // int rectX = (width - rectWidth) / 2;  // Centered horizontally
-    // topRect = cv::Rect(rectX, 0, rectWidth, rectHeight);
-    // cv::rectangle(mask, topRect, cv::Scalar(0), -1);
-
-    // Create a masked image by bitwise AND operation
-    cv::Mat masked_image;
-    cv::bitwise_and(frame, frame, masked_image, mask);
-
-    return masked_image;
+    cv::Mat croppedFrame = frame.clone();
+    croppedFrame(cv::Rect(0, 0, frame.cols, frame.rows * 0.5)) = cv::Scalar(0);
+    return croppedFrame;
 }
 
 cv::Mat RoadLineDetector::getEdgeDetectionResult() const {
