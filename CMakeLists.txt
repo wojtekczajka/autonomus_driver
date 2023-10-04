@@ -19,6 +19,8 @@ add_executable(autonomus_driver
     src/road_line_detector/road_line_detector.cpp
 )
 
+target_link_libraries(autonomus_driver ${OpenCV_LIBS} CURL::libcurl)
+
 target_include_directories(autonomus_driver PRIVATE
     include     
 )
