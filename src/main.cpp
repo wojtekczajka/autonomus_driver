@@ -25,7 +25,7 @@ int main() {
     Logger logger("/dev/null");
     Camera camera(logger);
     SteeringControl steeringControl(logger);
-    RoadLineDetector roadLineDetector;
+    RoadLineDetector roadLineDetector(logger);
     if (!camera.isOpened()) {
         std::cerr << "Error: Couldn't open the camera." << std::endl;
         return -1;
@@ -47,23 +47,20 @@ int main() {
         cv::Mat frame = camera.getCurrentFrame();
         cv::line(frame, leftLineinePoints.first, leftLineinePoints.second, cv::Scalar(255, 0, 0), 2);
         cv::line(frame, rightLineinePoints.first, rightLineinePoints.second, cv::Scalar(255, 0, 0), 2);
-        cv::imshow("line detector result", frame);
-        cv::waitKey(1);
 
         std::string fpsString = "FPS: " + std::to_string(camera.getFPS());
 
-        // Add the FPS text to the frame
-        // cv::putText(
-        //     roadDetection.getEdgeDetectionResult(),   // Target image
-        //     fpsString,                                // Text to be added
-        //     cv::Point(10, 30),                        // Position
-        //     cv::FONT_HERSHEY_SIMPLEX,                 // Font type
-        //     1.0,                                      // Font scale
-        //     cv::Scalar(255, 255, 255),               // Text color (white)
-        //     2,                                       // Text thickness
-        //     cv::LINE_AA                               // Line type
-        // );
-        // cv::imshow("Camera Frame", roadDetection.getEdgeDetectionResult());
+        cv::putText(
+            frame,   // Target image
+            fpsString,                                // Text to be added
+            cv::Point(10, 30),                        // Position
+            cv::FONT_HERSHEY_SIMPLEX,                 // Font type
+            1.0,                                      // Font scale
+            cv::Scalar(255, 255, 255),               // Text color (white)
+            2,                                       // Text thickness
+            cv::LINE_AA                               // Line type
+        );
+        cv::imshow("Camera Frame", frame);
 
         if (cv::waitKey(1) == 'q') {
             break;

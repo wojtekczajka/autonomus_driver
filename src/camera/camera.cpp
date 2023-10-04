@@ -60,6 +60,6 @@ double Camera::getFPS() {
     double fps = static_cast<double>(fpsCounter) / (elapsedTime / 1000.0);  // Convert milliseconds to seconds
     fpsCounter = 0;
     fpsStartTime = std::chrono::steady_clock::now();
-    logger.info(fmt::format("CURRENT FPS VALUE: {}", fps));
+    // logger.info(fmt::format("CURRENT FPS VALUE: {}", fps));
     return fps;
 }
