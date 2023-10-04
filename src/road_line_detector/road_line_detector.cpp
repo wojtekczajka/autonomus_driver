@@ -19,13 +19,30 @@ std::pair<cv::Point2f, cv::Point2f> vectorToLinePoints(const cv::Vec4f& vector, 
     return std::make_pair(startPoint, endPoint);
 }
 
+cv::Mat autoCanny(const cv::Mat& frame, double sigma = 0.33) {
+    cv::Scalar v = cv::mean(frame);
+    double median = v.val[0];
+
+    int lower = std::max(0.0, (1.0 - sigma) * median);
+    int upper = std::min(255.0, (1.0 + sigma) * median);
+    std::cout << lower << " " << upper << std::endl;
+
+    cv::Mat edged;
+    cv::Canny(frame, edged, lower, upper);
+
+    return edged;
+}
+
 cv::Mat RoadLineDetector::preprocessFrame(const cv::Mat& frame) {
     cv::Mat greyscaleFrame = convertFrameToGrayscale(frame);
+    cv::Mat temp = greyscaleFrame;
+    
     greyscaleFrame = cropRoiFromFrame(greyscaleFrame);
-    cv::medianBlur(greyscaleFrame, greyscaleFrame, 15);
+    cv::medianBlur(greyscaleFrame, greyscaleFrame, 23);
 
-    cv::Mat resultFrame;
-    cv::Canny(greyscaleFrame, resultFrame, 45, 125, 3);
+    cv::Mat resultFrame = autoCanny(greyscaleFrame);
+    cv::imshow("canny", resultFrame);
+    cv::waitKey(1);
 
     return resultFrame;
 }
