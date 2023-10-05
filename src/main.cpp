@@ -30,9 +30,10 @@ int main() {
         std::cerr << "Error: Couldn't open the camera." << std::endl;
         return -1;
     }
-
-    // steeringControl.start();
-    // steeringControl.driveForward(50);
+    int frameCount = 0;  // Initialize frame count
+    bool stopCar = false;
+    steeringControl.start();
+    steeringControl.driveForward(20);
     // std::this_thread::sleep_for(std::chrono::seconds(5));
     // steeringControl.stop();
 
@@ -48,23 +49,62 @@ int main() {
         cv::line(frame, leftLineinePoints.first, leftLineinePoints.second, cv::Scalar(255, 0, 0), 2);
         cv::line(frame, rightLineinePoints.first, rightLineinePoints.second, cv::Scalar(255, 0, 0), 2);
 
+        int frameHeight = frame.rows;
+        int yCoordinate = static_cast<int>(0.8 * frameHeight);
+        float leftX = leftLineinePoints.first.x + (leftLineinePoints.second.x - leftLineinePoints.first.x) * (yCoordinate - leftLineinePoints.first.y) / (leftLineinePoints.second.y - leftLineinePoints.first.y);
+        float rightX = rightLineinePoints.first.x + (rightLineinePoints.second.x - rightLineinePoints.first.x) * (yCoordinate - rightLineinePoints.first.y) / (rightLineinePoints.second.y - rightLineinePoints.first.y);
+        float distance = rightX - leftX;
+        float frameCenter = static_cast<float>(frame.cols) / 2.0;
+        float decenteredPixels = frameCenter - ((leftX + rightX) / 2.0);
+        std::cout << "Distance between lines at y = " << yCoordinate << ": " << distance << " pixels" << std::endl;
+        std::cout << "Decentered by " << decenteredPixels << " pixels" << std::endl;
+        cv::line(frame, cv::Point(0, yCoordinate), cv::Point(frame.cols, yCoordinate), cv::Scalar(0, 255, 0), 2);
+        int circleRadius = 5;
+        cv::circle(frame, cv::Point(static_cast<int>(leftX), yCoordinate), circleRadius, cv::Scalar(0, 0, 255), -1);   // Red circle for left point
+        cv::circle(frame, cv::Point(static_cast<int>(rightX), yCoordinate), circleRadius, cv::Scalar(0, 0, 255), -1);  // Red circle for right point
+
+        if (!stopCar) {
+            if (frameCount % 2 == 0) {
+                if (std::abs(decenteredPixels) <= 10) {
+                    std::cout << "centring" << std::endl;
+                    steeringControl.center();
+                }
+                else if (decenteredPixels < 0) {
+                    steeringControl.turnRight(30);
+                    std::cout << "Turning right" << std::endl;
+                } else if (decenteredPixels > 0) {
+                    steeringControl.turnLeft(30);
+                    std::cout << "Turning left" << std::endl;
+                }
+            }
+
+            if (frameCount >= 300) {
+                // After 100 frames, stop the car
+                steeringControl.stop();
+                stopCar = true;
+                std::cout << "Stopping the car" << std::endl;
+                break;
+            }
+        }
+
         std::string fpsString = "FPS: " + std::to_string(camera.getFPS());
 
         cv::putText(
-            frame,   // Target image
-            fpsString,                                // Text to be added
-            cv::Point(10, 30),                        // Position
-            cv::FONT_HERSHEY_SIMPLEX,                 // Font type
-            1.0,                                      // Font scale
-            cv::Scalar(255, 255, 255),               // Text color (white)
-            2,                                       // Text thickness
-            cv::LINE_AA                               // Line type
+            frame,                      // Target image
+            fpsString,                  // Text to be added
+            cv::Point(10, 30),          // Position
+            cv::FONT_HERSHEY_SIMPLEX,   // Font type
+            1.0,                        // Font scale
+            cv::Scalar(255, 255, 255),  // Text color (white)
+            2,                          // Text thickness
+            cv::LINE_AA                 // Line type
         );
         cv::imshow("Camera Frame", frame);
 
         if (cv::waitKey(1) == 'q') {
             break;
         }
+        frameCount++;
     }
 
     // Release the camera capture object
