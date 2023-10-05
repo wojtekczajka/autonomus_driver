@@ -1,8 +1,9 @@
 #include "steering_control/steering_control.h"
+
 #include "common/config_parser.h"
 
-SteeringControl::SteeringControl(Logger& logger) 
-    : logger(logger), curl(curl_easy_init()), headers(nullptr) {
+SteeringControl::SteeringControl(Logger& logger)
+    : logger(logger), curl(curl_easy_init()), headers(nullptr), currentSpeedValue(0), currentTurnValue(0) {
     if (!curl) {
         logger.error("Failed to initialize cURL.");
     }
@@ -29,6 +30,7 @@ bool SteeringControl::start() {
 }
 
 bool SteeringControl::stop() {
+    currentSpeedValue = 0;
     return executeCurl("stop");
 }
 
@@ -37,6 +39,8 @@ bool SteeringControl::turnLeft(int value) {
         logInvalidValue("turnLeft", value);
         return false;
     }
+    // executeCurl("set_speed_for_right_motor", currentSpeedValue * 0.3);
+    // executeCurl("set_speed_for_left_motor", 0);
     return executeCurl("turn_left", value);
 }
 
@@ -45,10 +49,14 @@ bool SteeringControl::turnRight(int value) {
         logInvalidValue("turnRight", value);
         return false;
     }
+    // executeCurl("set_speed_for_right_motor", 0);
+    // executeCurl("set_speed_for_left_motor", currentSpeedValue * 0.3);
     return executeCurl("turn_right", value);
 }
 
 bool SteeringControl::center() {
+    currentTurnValue = 0;
+    executeCurl("drive_forward", currentSpeedValue);
     return executeCurl("center");
 }
 
@@ -57,6 +65,7 @@ bool SteeringControl::driveForward(int value) {
         logInvalidValue("driveForward", value);
         return false;
     }
+    currentSpeedValue = value;
     return executeCurl("drive_forward", value);
 }
 
@@ -65,6 +74,7 @@ bool SteeringControl::driveBackward(int value) {
         logInvalidValue("driveBackward", value);
         return false;
     }
+    currentSpeedValue = value;
     return executeCurl("drive_backward", value);
 }
 
@@ -100,7 +110,7 @@ bool SteeringControl::executeCurl(const std::string& action, int value) {
     }
 }
 
-size_t SteeringControl::writeCallback(void* contents, size_t size, size_t nmemb,  std::string* output) {
+size_t SteeringControl::writeCallback(void* contents, size_t size, size_t nmemb, std::string* output) {
     size_t total_size = size * nmemb;
     std::string* response = output;
     response->append(static_cast<char*>(contents), total_size);

@@ -29,6 +29,8 @@ class SteeringControl {
     CURL* curl;
     std::string url;
     struct curl_slist* headers;
+    int currentSpeedValue;
+    int currentTurnValue;
 
     static size_t writeCallback(void* contents, size_t size, size_t nmemb, std::string* output);
 };

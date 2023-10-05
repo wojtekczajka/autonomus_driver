@@ -22,6 +22,9 @@ std::pair<cv::Point2f, cv::Point2f> vectorToLinePointss(const cv::Vec4f& vector,
 }
 
 int main() {
+    std::string outputVideoFile = "output_video.avi";
+    int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
+    cv::VideoWriter videoWriter(outputVideoFile, fourcc, 15, cv::Size(640, 480), true);
     Logger logger("/dev/null");
     Camera camera(logger);
     SteeringControl steeringControl(logger);
@@ -33,7 +36,7 @@ int main() {
     int frameCount = 0;  // Initialize frame count
     bool stopCar = false;
     steeringControl.start();
-    steeringControl.driveForward(20);
+    // steeringControl.driveForward(25);
     // std::this_thread::sleep_for(std::chrono::seconds(5));
     // steeringControl.stop();
 
@@ -64,51 +67,54 @@ int main() {
         cv::circle(frame, cv::Point(static_cast<int>(rightX), yCoordinate), circleRadius, cv::Scalar(0, 0, 255), -1);  // Red circle for right point
 
         if (!stopCar) {
-            if (frameCount % 2 == 0) {
+            if (frameCount % 1 == 0) {
                 if (std::abs(decenteredPixels) <= 10) {
                     std::cout << "centring" << std::endl;
                     steeringControl.center();
                 }
-                else if (decenteredPixels < 0) {
-                    steeringControl.turnRight(30);
+            } else {
+                if (decenteredPixels < 0) {
+                    steeringControl.turnRight(40);
                     std::cout << "Turning right" << std::endl;
-                } else if (decenteredPixels > 0) {
-                    steeringControl.turnLeft(30);
+                } else {
+                    steeringControl.turnLeft(40);
                     std::cout << "Turning left" << std::endl;
                 }
             }
-
-            if (frameCount >= 300) {
-                // After 100 frames, stop the car
-                steeringControl.stop();
-                stopCar = true;
-                std::cout << "Stopping the car" << std::endl;
-                break;
-            }
         }
 
-        std::string fpsString = "FPS: " + std::to_string(camera.getFPS());
-
-        cv::putText(
-            frame,                      // Target image
-            fpsString,                  // Text to be added
-            cv::Point(10, 30),          // Position
-            cv::FONT_HERSHEY_SIMPLEX,   // Font type
-            1.0,                        // Font scale
-            cv::Scalar(255, 255, 255),  // Text color (white)
-            2,                          // Text thickness
-            cv::LINE_AA                 // Line type
-        );
-        cv::imshow("Camera Frame", frame);
-
-        if (cv::waitKey(1) == 'q') {
+        if (frameCount >= 250) {
+            // After 100 frames, stop the car
+            steeringControl.stop();
+            stopCar = true;
+            std::cout << "Stopping the car" << std::endl;
             break;
         }
-        frameCount++;
     }
 
-    // Release the camera capture object
-    cv::destroyAllWindows();
+    std::string fpsString = "FPS: " + std::to_string(camera.getFPS());
 
-    return 0;
+    cv::putText(
+        frame,                      // Target image
+        fpsString,                  // Text to be added
+        cv::Point(10, 30),          // Position
+        cv::FONT_HERSHEY_SIMPLEX,   // Font type
+        1.0,                        // Font scale
+        cv::Scalar(255, 255, 255),  // Text color (white)
+        2,                          // Text thickness
+        cv::LINE_AA                 // Line type
+    );
+    cv::imshow("Camera Frame", frame);
+    videoWriter.write(frame);
+    if (cv::waitKey(1) == 'q') {
+        break;
+    }
+    frameCount++;
+}
+
+// Release the camera capture object
+cv::destroyAllWindows();
+videoWriter.release();
+
+return 0;
 }
