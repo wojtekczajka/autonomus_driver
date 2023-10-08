@@ -56,7 +56,6 @@ bool SteeringControl::turnRight(int value) {
 
 bool SteeringControl::center() {
     currentTurnValue = 0;
-    executeCurl("drive_forward", currentSpeedValue);
     return executeCurl("center");
 }
 
@@ -87,11 +86,18 @@ void SteeringControl::logInvalidValue(const std::string& action, const int& valu
 }
 
 bool SteeringControl::executeCurl(const std::string& action, int value) {
+    if (action == previousAction && value == previousValue || action == "center" && previousAction == "center") {
+        logger.info("Skipping action");
+        return true;
+    }
+
     if (!curl) {
         logger.error("cURL handle not initialized.");
         return false;
     }
 
+    previousAction = action;
+    previousValue = value;
     std::string postFields = "{\"action\":\"" + action + "\",\"value\":" + std::to_string(value) + "}";
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
 

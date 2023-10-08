@@ -31,6 +31,8 @@ class SteeringControl {
     struct curl_slist* headers;
     int currentSpeedValue;
     int currentTurnValue;
+    std::string previousAction;
+    int previousValue;
 
     static size_t writeCallback(void* contents, size_t size, size_t nmemb, std::string* output);
 };

@@ -16,8 +16,15 @@ add_executable(autonomus_driver
     src/common/config_parser.cpp
     src/camera/camera.cpp
     src/steering_control/steering_control.cpp
-    src/road_line_detector/road_line_detector.cpp
+    src/road_lane_detector/road_lane_detector_contours.cpp
+    src/road_lane_detector/road_lane_detector_canny.cpp
 )
+
+add_executable(hsvTest
+    src/helpers/hsvTest.cpp
+)
+
+target_link_libraries(hsvTest ${OpenCV_LIBS})
 
 target_link_libraries(autonomus_driver ${OpenCV_LIBS} CURL::libcurl)
 
