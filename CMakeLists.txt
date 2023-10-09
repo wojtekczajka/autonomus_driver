@@ -15,6 +15,7 @@ add_executable(autonomus_driver
     src/common/logger.cpp
     src/common/config_parser.cpp
     src/camera/camera.cpp
+    src/distance/distance_client.cpp
     src/steering_control/steering_control.cpp
     src/road_lane_detector/road_lane_detector_contours.cpp
     src/road_lane_detector/road_lane_detector_canny.cpp

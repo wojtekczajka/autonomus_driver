@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "camera/camera.h"
+#include "distance/distance_client.h"
 #include "road_lane_detector/road_lane_detector_contours.h"
 #include "steering_control/steering_control.h"
 
@@ -37,6 +38,7 @@ int main() {
     cv::VideoWriter videoWriter(outputVideoFile, fourcc, 30, cv::Size(640, 368), true);
     Logger logger("/dev/null");
     Camera camera(logger);
+    DistanceClient distanceClient("http://127.0.0.1:8000");
     SteeringControl steeringControl(logger);
     RoadLaneDetectorContours roadLaneDetectorContours;
     // RoadLineDetector roadLineDetector(logger);
@@ -47,7 +49,7 @@ int main() {
     int frameCount = 0;  // Initialize frame count
     bool stopCar = false;
     steeringControl.start();
-    steeringControl.driveForward(35);
+    // steeringControl.driveForward(35);
     // std::this_thread::sleep_for(std::chrono::seconds(5));
     // steeringControl.stop();
 
@@ -84,6 +86,20 @@ int main() {
             }
         }
         cv::Mat frame = camera.getCurrentFrame();
+        std::cout << distanceClient.getDistance() << std::endl;
+        cv::putText(
+            frame,  // Target image
+            "distance: " +
+                std::to_string((int) distanceClient.getDistance()) +
+                "cm",                   // Text to be added
+            cv::Point(10, 120),         // Position
+            cv::FONT_HERSHEY_SIMPLEX,   // Font type
+            1.0,                        // Font scale
+            cv::Scalar(255, 255, 255),  // Text color (white)
+            2,                          // Text thickness
+            cv::LINE_AA                 // Line type
+        );
+
         cv::putText(
             frame,                      // Target image
             actionText,                 // Text to be added
@@ -96,14 +112,14 @@ int main() {
         );
 
         cv::putText(
-            frame,                                           // Target image
+            frame,                                              // Target image
             "Decentered: " + std::to_string(decenteredPixels),  // Text to be added
-            cv::Point(10, 60),                               // Position
-            cv::FONT_HERSHEY_SIMPLEX,                        // Font type
-            1.0,                                             // Font scale
-            cv::Scalar(255, 255, 255),                       // Text color (white)
-            2,                                               // Text thickness
-            cv::LINE_AA                                      // Line type
+            cv::Point(10, 60),                                  // Position
+            cv::FONT_HERSHEY_SIMPLEX,                           // Font type
+            1.0,                                                // Font scale
+            cv::Scalar(255, 255, 255),                          // Text color (white)
+            2,                                                  // Text thickness
+            cv::LINE_AA                                         // Line type
         );
 
         std::string fpsString = "FPS: " + std::to_string(camera.getFPS());
