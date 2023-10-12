@@ -40,11 +40,6 @@ std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
     return detectedLines;
 }
 
-int RoadLaneDetectorCanny::getXPosition(const cv::Mat& frame) {
-    int xPosition = 0;
-    return 0;
-}
-
 std::pair<std::vector<cv::Point>, std::vector<cv::Point>> findRightAndLeftPoints(const std::vector<cv::Vec4i>& lines) {
     std::vector<cv::Point> right_points;
     std::vector<cv::Point> left_points;
@@ -90,6 +85,40 @@ std::pair<cv::Vec4i, cv::Vec4i> RoadLaneDetectorCanny::detectLane(const cv::Mat&
     return findLeftAndRightLine(rightAndLeftPoints);
 }
 
-void processFrame(const cv::Mat frame) {
-    return;
+// Function to calculate the intersection point of a line with a horizontal line at a specific height
+void calculateIntersection(const cv::Vec4i& line, double y, double& x) {
+    double t = (y - line[3]) / line[1];
+    x = line[0] * t + line[2];
+}
+
+// Function to calculate the decentering relative to the center of the image
+double calculateDecentering(const cv::Vec4i& leftLine, const cv::Vec4i& rightLine, const int& imageCols, const int imageHeight) {
+    double center_y = imageHeight * 0.8;
+    double leftX, rightX;
+
+    // Calculate the intersection points for the left and right lines
+    calculateIntersection(leftLine, center_y, leftX);
+    calculateIntersection(rightLine, center_y, rightX);
+
+    // Calculate the midpoint between the two intersection points
+    double centerX = (leftX + rightX) / 2.0;
+
+    // Calculate the decentered value relative to the center of the image
+    double centerImageX = imageCols / 2.0;
+    double decentering = centerX - centerImageX;
+
+    return decentering;
+}
+
+int RoadLaneDetectorCanny::getXPosition(const cv::Mat& frame) {
+    return xPosition;
+}
+
+std::pair<cv::Vec4i, cv::Vec4i> RoadLaneDetectorCanny::getLanes() {
+    return lanes;
+}
+
+void RoadLaneDetectorCanny::processFrame(const cv::Mat frame) {
+    lanes = detectLane(frame);
+    xPosition = calculateDecentering(lanes.first, lanes.second, frame.cols, frame.rows);
 }

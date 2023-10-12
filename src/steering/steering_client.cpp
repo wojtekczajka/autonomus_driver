@@ -1,8 +1,8 @@
-#include "steering_control/steering_control.h"
+#include "steering/steering_client.h"
 
 #include "common/config_parser.h"
 
-SteeringControl::SteeringControl(Logger& logger)
+SteeringClient::SteeringClient(Logger& logger)
     : logger(logger), curl(curl_easy_init()), headers(nullptr), currentSpeedValue(0), currentTurnValue(0) {
     if (!curl) {
         logger.error("Failed to initialize cURL.");
@@ -18,48 +18,44 @@ SteeringControl::SteeringControl(Logger& logger)
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
 }
 
-SteeringControl::~SteeringControl() {
+SteeringClient::~SteeringClient() {
     if (curl) {
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
     }
 }
 
-bool SteeringControl::start() {
+bool SteeringClient::start() {
     return executeCurl("start");
 }
 
-bool SteeringControl::stop() {
+bool SteeringClient::stop() {
     currentSpeedValue = 0;
     return executeCurl("stop");
 }
 
-bool SteeringControl::turnLeft(int value) {
+bool SteeringClient::turnLeft(int value) {
     if (!isValidValue(value)) {
         logInvalidValue("turnLeft", value);
         return false;
     }
-    // executeCurl("set_speed_for_right_motor", currentSpeedValue * 0.3);
-    // executeCurl("set_speed_for_left_motor", 0);
     return executeCurl("turn_left", value);
 }
 
-bool SteeringControl::turnRight(int value) {
+bool SteeringClient::turnRight(int value) {
     if (!isValidValue(value)) {
         logInvalidValue("turnRight", value);
         return false;
     }
-    // executeCurl("set_speed_for_right_motor", 0);
-    // executeCurl("set_speed_for_left_motor", currentSpeedValue * 0.3);
     return executeCurl("turn_right", value);
 }
 
-bool SteeringControl::center() {
+bool SteeringClient::center() {
     currentTurnValue = 0;
     return executeCurl("center");
 }
 
-bool SteeringControl::driveForward(int value) {
+bool SteeringClient::driveForward(int value) {
     if (!isValidValue(value)) {
         logInvalidValue("driveForward", value);
         return false;
@@ -68,7 +64,7 @@ bool SteeringControl::driveForward(int value) {
     return executeCurl("drive_forward", value);
 }
 
-bool SteeringControl::driveBackward(int value) {
+bool SteeringClient::driveBackward(int value) {
     if (!isValidValue(value)) {
         logInvalidValue("driveBackward", value);
         return false;
@@ -77,15 +73,15 @@ bool SteeringControl::driveBackward(int value) {
     return executeCurl("drive_backward", value);
 }
 
-bool SteeringControl::isValidValue(const int& value) const {
+bool SteeringClient::isValidValue(const int& value) const {
     return (value >= 0 && value <= 100);
 }
 
-void SteeringControl::logInvalidValue(const std::string& action, const int& value) const {
+void SteeringClient::logInvalidValue(const std::string& action, const int& value) const {
     logger.error("Invalid value for " + action + ": " + std::to_string(value));
 }
 
-bool SteeringControl::executeCurl(const std::string& action, int value) {
+bool SteeringClient::executeCurl(const std::string& action, int value) {
     if (action == previousAction && value == previousValue || action == "center" && previousAction == "center") {
         logger.info("Skipping action");
         return true;
@@ -116,7 +112,7 @@ bool SteeringControl::executeCurl(const std::string& action, int value) {
     }
 }
 
-size_t SteeringControl::writeCallback(void* contents, size_t size, size_t nmemb, std::string* output) {
+size_t SteeringClient::writeCallback(void* contents, size_t size, size_t nmemb, std::string* output) {
     size_t total_size = size * nmemb;
     std::string* response = output;
     response->append(static_cast<char*>(contents), total_size);

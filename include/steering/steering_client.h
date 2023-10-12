@@ -6,10 +6,10 @@
 
 #include "common/logger.h"
 
-class SteeringControl {
+class SteeringClient {
    public:
-    SteeringControl(Logger& logger);
-    ~SteeringControl();
+    SteeringClient(Logger& logger);
+    ~SteeringClient();
 
     bool start();
     bool stop();

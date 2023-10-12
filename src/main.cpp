@@ -5,8 +5,17 @@
 
 #include "camera/camera.h"
 #include "distance/distance_client.h"
-#include "road_lane_detector/road_lane_detector_contours.h"
-#include "steering_control/steering_control.h"
+#include "road_lane_detector/road_lane_detector_canny.h"
+#include "steering/steering_client.h"
+
+void drawLine(cv::Mat& image, double vx, double vy, double x0, double y0, cv::Scalar color, int thickness = 2) {
+    float x1 = x0 + (0 - y0) * vx / vy;
+    float x2 = x0 + (image.rows - 1 - y0) * vx / vy;
+
+    cv::Point2f startPoint(x1, 0);
+    cv::Point2f endPoint(x2, image.rows - 1);
+    cv::line(image, startPoint, endPoint, color, thickness);
+}
 
 volatile bool shouldExit = false;
 
@@ -39,8 +48,8 @@ int main() {
     Logger logger("/dev/null");
     Camera camera(logger);
     DistanceClient distanceClient("http://127.0.0.1:8000");
-    SteeringControl steeringControl(logger);
-    RoadLaneDetectorContours roadLaneDetectorContours;
+    SteeringClient steeringClient(logger);
+    RoadLaneDetectorCanny roadLaneDetectorCanny;
     // RoadLineDetector roadLineDetector(logger);
     if (!camera.isOpened()) {
         std::cerr << "Error: Couldn't open the camera." << std::endl;
@@ -48,20 +57,23 @@ int main() {
     }
     int frameCount = 0;  // Initialize frame count
     bool stopCar = false;
-    steeringControl.start();
-    // steeringControl.driveForward(35);
+    steeringClient.start();
+    // steeringClient.driveForward(35);
     // std::this_thread::sleep_for(std::chrono::seconds(5));
-    // steeringControl.stop();
-
+    // steeringClient.stop();
+    int decenteredPixels;
+    std::pair<cv::Vec4i, cv::Vec4i> lanes;
     while (true) {
         if (!camera.readFrame()) {
             std::cerr << "Error: Could not read frame." << std::endl;
             break;
         }
 
-        int decenteredPixels;
         try {
-            decenteredPixels = roadLaneDetectorContours.getXPosition(camera.getCurrentFrame());
+            roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
+            decenteredPixels = roadLaneDetectorCanny.getXPosition(camera.getCurrentFrame());
+            lanes = roadLaneDetectorCanny.getLanes();
+
         } catch (std::runtime_error er) {
             er.what();
             continue;
@@ -72,25 +84,27 @@ int main() {
         // if (!stopCar) {
         if (decenteredPixels != decenteredPixels) {
             actionText += "Nan";
-            steeringControl.turnRight(80);
+            steeringClient.turnRight(80);
         } else if (std::abs(decenteredPixels) <= 10) {
             actionText += "Centering";
-            steeringControl.center();
+            steeringClient.center();
         } else {
             if (decenteredPixels > 0) {
                 actionText += "Turning right";
-                steeringControl.turnRight(80);
+                steeringClient.turnRight(80);
             } else {
                 actionText += "Turning left";
-                steeringControl.turnLeft(80);
+                steeringClient.turnLeft(80);
             }
         }
         cv::Mat frame = camera.getCurrentFrame();
         std::cout << distanceClient.getDistance() << std::endl;
+        drawLine(frame, lanes.first[0], lanes.first[1], lanes.first[2], lanes.first[3], cv::Scalar(255, 255, 255));
+        drawLine(frame, lanes.second[0], lanes.second[1], lanes.second[2], lanes.second[3], cv::Scalar(255, 255, 255));
         cv::putText(
             frame,  // Target image
             "distance: " +
-                std::to_string((int) distanceClient.getDistance()) +
+                std::to_string((int)distanceClient.getDistance()) +
                 "cm",                   // Text to be added
             cv::Point(10, 120),         // Position
             cv::FONT_HERSHEY_SIMPLEX,   // Font type
@@ -145,7 +159,7 @@ int main() {
     }
 
     // Release the camera capture object
-    steeringControl.stop();
+    steeringClient.stop();
     cv::destroyAllWindows();
     videoWriter.release();
 

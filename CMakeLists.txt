@@ -8,7 +8,7 @@ find_package(spdlog REQUIRED)
 find_package(CURL REQUIRED)
 
 file(COPY "src/camera/camera_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY "src/steering_control/curl_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY "src/steering/curl_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
 
 add_executable(autonomus_driver
     src/main.cpp
@@ -16,8 +16,8 @@ add_executable(autonomus_driver
     src/common/config_parser.cpp
     src/camera/camera.cpp
     src/distance/distance_client.cpp
-    src/steering_control/steering_control.cpp
-    src/road_lane_detector/road_lane_detector_contours.cpp
+    src/steering/steering_client.cpp
+    # src/road_lane_detector/road_lane_detector_contours.cpp
     src/road_lane_detector/road_lane_detector_canny.cpp
 )
 
