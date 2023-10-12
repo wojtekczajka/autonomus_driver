@@ -46,8 +46,7 @@ cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
     GaussianBlur(resultFrame, resultFrame, cv::Size(5, 5), 0);
     cv::threshold(resultFrame, resultFrame, 225, 255, cv::THRESH_BINARY);
     resultFrame = autoCanny(resultFrame);
-    int kernelSize = 5;
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
     cv::morphologyEx(resultFrame, resultFrame, cv::MORPH_CLOSE, kernel);
     resultFrame = cropRoiFromFrame(resultFrame);
     return resultFrame;
@@ -60,41 +59,46 @@ void drawDetectedLines(cv::Mat& image, const std::vector<cv::Vec4i>& lines, cv::
 }
 
 std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
-    cv::Mat frame(processedFrame);
     std::vector<cv::Vec4i> detectedLines;
-    cv::HoughLinesP(frame, detectedLines, 1, CV_PI / 180, 20, 20, 3);
-    // drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
-    // cv::imshow("lines", frame);
+    cv::HoughLinesP(processedFrame, detectedLines, 1, CV_PI / 180, 20, 20, 3);
+
+    cv::Mat frame(processedFrame);
+    drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
+    cv::imshow("lines", frame);
+
     return detectedLines;
 }
 
-std::pair<std::vector<cv::Point>, std::vector<cv::Point>> findRightAndLeftPoints(const std::vector<cv::Vec4i>& lines) {
-    std::vector<cv::Point> right_points;
-    std::vector<cv::Point> left_points;
+void RoadLaneDetectorCanny::classifyPoints(const std::vector<cv::Vec4i>& lines) {
+    rightPoints.clear();
+    leftPoints.clear();
+    horizontalPoints.clear();
 
     for (cv::Vec4i line : lines) {
         int x1 = line[0], y1 = line[1], x2 = line[2], y2 = line[3];
         double slope = static_cast<double>(y2 - y1) / (x2 - x1);
         if (std::abs(slope) < 0.5) {
-            continue;
-            // todo horizontall line...
-        }
-        if (slope <= 0) {
-            left_points.push_back(cv::Point(x1, y1));
-            left_points.push_back(cv::Point(x2, y2));
+            horizontalPoints.push_back(cv::Point(x1, y1));
+            horizontalPoints.push_back(cv::Point(x2, y2));
         } else {
-            right_points.push_back(cv::Point(x1, y1));
-            right_points.push_back(cv::Point(x2, y2));
+            if (slope <= 0) {
+                leftPoints.push_back(cv::Point(x1, y1));
+                leftPoints.push_back(cv::Point(x2, y2));
+            } else {
+                rightPoints.push_back(cv::Point(x1, y1));
+                rightPoints.push_back(cv::Point(x2, y2));
+            }
         }
     }
-    return std::make_pair(right_points, left_points);
 }
 
-void RoadLaneDetectorCanny::findLeftAndRightLine(const std::pair<std::vector<cv::Point>, std::vector<cv::Point>>& rightAndLeftPoints) {
-    if (rightLaneDetected)
-        fitLine(rightAndLeftPoints.first, rightVerticalLane, cv::DIST_L2, 0, 0.01, 0.01);
-    if (leftLaneDetected)
-        fitLine(rightAndLeftPoints.second, leftVerticalLane, cv::DIST_L2, 0, 0.01, 0.01);
+void RoadLaneDetectorCanny::findLanes() {
+    if (rightVerticalLaneDetected)
+        fitLine(rightPoints, rightVerticalLane, cv::DIST_L2, 0, 0.01, 0.01);
+    if (leftVerticalLaneDetected)
+        fitLine(leftPoints, leftVerticalLane, cv::DIST_L2, 0, 0.01, 0.01);
+    if (topHorizontalLaneDetected)
+        fitLine(horizontalPoints, topHorizontalLane, cv::DIST_L2, 0, 0.01, 0.01);
 }
 
 void calculateIntersection(const cv::Vec4i& line, double y, double& x) {
@@ -128,10 +132,11 @@ std::pair<cv::Vec4i, cv::Vec4i> RoadLaneDetectorCanny::getLanes() {
 void RoadLaneDetectorCanny::processFrame(const cv::Mat frame) {
     cv::Mat preprocessedFrame = preprocessFrame(frame);
     std::vector<cv::Vec4i> detectedLines = detectLines(preprocessedFrame);
-    std::pair<std::vector<cv::Point>, std::vector<cv::Point>> rightAndLeftPoints = findRightAndLeftPoints(detectedLines);
-    rightLaneDetected = rightAndLeftPoints.first.size();
-    leftLaneDetected = rightAndLeftPoints.second.size();
-    findLeftAndRightLine(rightAndLeftPoints);
-    if (rightLaneDetected && leftLaneDetected)
+    classifyPoints(detectedLines);
+    rightVerticalLaneDetected = rightPoints.size();
+    leftVerticalLaneDetected = leftPoints.size();
+    topHorizontalLaneDetected = horizontalPoints.size();
+    findLanes();
+    if (rightVerticalLaneDetected && leftVerticalLaneDetected)
         xPosition = calculateDecentering(frame.cols, frame.rows);
 }
