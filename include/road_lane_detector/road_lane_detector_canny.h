@@ -1,15 +1,25 @@
 #pragma once
+#include <opencv2/opencv.hpp>
+// #include "road_lane_detector/road_lane_detector.h"
 
-#include "road_lane_detector/road_lane_detector.h"
-
-class RoadLaneDetectorCanny : public RoadLaneDetector {
+class RoadLaneDetectorCanny {
    public:
-    void processFrame(const cv::Mat frame) override;
-    int getXPosition(const cv::Mat& frame) override;
-    std::pair<cv::Vec4i, cv::Vec4i> getLanes() override; 
-    std::pair<cv::Vec4i, cv::Vec4i> detectLane(const cv::Mat& frame) override;
+    RoadLaneDetectorCanny();
+    void processFrame(const cv::Mat frame);
+    int getXPosition(const cv::Mat& frame);
+    std::pair<cv::Vec4i, cv::Vec4i> getLanes();
 
    private:
+    void findLeftAndRightLine(const std::pair<std::vector<cv::Point>, std::vector<cv::Point>>& rightAndLeftPoints);
+    double calculateDecentering(const int& imageCols, const int& imageHeight);
     int xPosition;
-    std::pair<cv::Vec4i, cv::Vec4i> lanes;
+    cv::Vec4i leftVerticalLane, rightVerticalLane;
+    bool leftLaneDetected, rightLaneDetected;
+    cv::Mat mask;
+    std::vector<cv::Point> trianglePoints;
+    cv::Mat preprocessFrame(const cv::Mat& frame);
+    cv::Mat cropRoiFromFrame(const cv::Mat& frame);
+    cv::Rect maskedTopRectangle;
+    cv::Rect maskedBottomRectangle;
+    cv::Rect maskedLeftRectangle;
 };
