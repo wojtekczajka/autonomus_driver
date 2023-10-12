@@ -20,23 +20,53 @@ cv::Mat autoCanny(const cv::Mat& frame, double sigma = 0.33) {
 
 cv::Mat cropRoiFromFrame(const cv::Mat& frame) {
     cv::Mat croppedFrame = frame.clone();
-    croppedFrame(cv::Rect(0, 0, frame.cols, frame.rows * 0.3)) = cv::Scalar(0);
+
+    cv::Rect topRoi(0, 0, frame.cols, static_cast<int>(frame.rows * 0.4));
+    cv::Rect bottomRoi(0, static_cast<int>(frame.rows * 0.9), frame.cols, static_cast<int>(frame.rows * 0.1));
+    cv::Rect leftRoi(0, 0, static_cast<int>(frame.cols * 0.1), frame.rows);
+
+    cv::Mat mask = cv::Mat::zeros(frame.size(), CV_8U);
+    std::vector<cv::Point> trianglePoints;
+    trianglePoints.push_back(cv::Point(0, 0));
+    trianglePoints.push_back(cv::Point(0, frame.cols / 2));
+    trianglePoints.push_back(cv::Point(frame.cols / 2, 0));
+    cv::fillConvexPoly(mask, trianglePoints, cv::Scalar(255));
+
+    croppedFrame.setTo(0, mask);
+    croppedFrame(topRoi) = cv::Scalar(0);
+    croppedFrame(bottomRoi) = cv::Scalar(0);
+    croppedFrame(leftRoi) = cv::Scalar(0);
+    
     return croppedFrame;
 }
 
 cv::Mat preprocessFrame(const cv::Mat& frame) {
     cv::Mat resultFrame = convertFrameToGrayscale(frame);
-    cv::medianBlur(resultFrame, resultFrame, 15);
+    cv::equalizeHist(resultFrame, resultFrame);
+    cv::threshold(resultFrame, resultFrame, 225, 255, cv::THRESH_BINARY);
+    GaussianBlur(resultFrame, resultFrame, cv::Size(3, 3), 0);
     resultFrame = autoCanny(resultFrame);
+    int kernelSize = 5;
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
+    cv::morphologyEx(resultFrame, resultFrame, cv::MORPH_CLOSE, kernel);
+    // cv::imshow("canny frame", resultFrame);
     resultFrame = cropRoiFromFrame(resultFrame);
-
+    cv::imshow("canny frame after roi", resultFrame);
     return resultFrame;
 }
 
+void drawDetectedLines(cv::Mat& image, const std::vector<cv::Vec4i>& lines, cv::Scalar color, int thickness = 10) {
+    for (const cv::Vec4i& line : lines) {
+        cv::line(image, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]), color, thickness);
+    }
+}
+
 std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
+    cv::Mat frame(processedFrame);
     std::vector<cv::Vec4i> detectedLines;
-    cv::HoughLinesP(processedFrame, detectedLines, 6, CV_PI / 180, 110, 30, 10);
-    // visualizeLines(processedFrame, detectedLines);
+    cv::HoughLinesP(frame, detectedLines, 1, CV_PI / 180, 10, 20, 10);
+    drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
+    cv::imshow("lines", frame);
     return detectedLines;
 }
 
@@ -47,7 +77,7 @@ std::pair<std::vector<cv::Point>, std::vector<cv::Point>> findRightAndLeftPoints
     for (cv::Vec4i line : lines) {
         int x1 = line[0], y1 = line[1], x2 = line[2], y2 = line[3];
         double slope = static_cast<double>(y2 - y1) / (x2 - x1);
-        if (std::abs(slope) < 0.5 || std::abs(slope) > 10) {
+        if (std::abs(slope) < 0.5) {
             continue;
         }
         if (slope <= 0) {
