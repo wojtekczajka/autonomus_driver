@@ -1,10 +1,12 @@
 #include "road_lane_detector/road_lane_detector_canny.h"
 
 RoadLaneDetectorCanny::RoadLaneDetectorCanny() : xPosition(0),
-                                                 rightVerticalLane(false),
-                                                 leftVerticalLane(false),
+                                                 rightVerticalLaneDetected(false),
+                                                 leftVerticalLaneDetected(false),
+                                                 topHorizontalLaneDetected(false),
                                                  mask(cv::Mat::zeros(cv::Size(640, 368), CV_8U)),
-                                                 trianglePoints({cv::Point(0, 0), cv::Point(0, 368 * 0.8), cv::Point(640 / 2, 0)}),
+                                                 leftMaskTrianglePoints({cv::Point(0, 0), cv::Point(0, 368 * 0.8), cv::Point(640 / 2, 0)}),
+                                                 rightMaskTrianglePoints({cv::Point(640, 0), cv::Point(static_cast<int>(640 * 0.7), 0), cv::Point(640, 368 * 0.8)}),
                                                  maskedTopRectangle(0, 0, 640, static_cast<int>(368 * 0.4)),
                                                  maskedBottomRectangle(0, static_cast<int>(368 * 0.9), 640, static_cast<int>(368 * 0.1)),
                                                  maskedLeftRectangle(0, 0, static_cast<int>(640 * 0.1), 368) {}
@@ -30,7 +32,8 @@ cv::Mat autoCanny(const cv::Mat& frame, double sigma = 0.33) {
 cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     cv::Mat croppedFrame = frame.clone();
 
-    cv::fillConvexPoly(mask, trianglePoints, cv::Scalar(255));
+    cv::fillConvexPoly(mask, leftMaskTrianglePoints, cv::Scalar(255));
+    cv::fillConvexPoly(mask, rightMaskTrianglePoints, cv::Scalar(255));
 
     croppedFrame.setTo(0, mask);
     croppedFrame(maskedTopRectangle) = cv::Scalar(0);
@@ -44,9 +47,9 @@ cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
     cv::Mat resultFrame = convertFrameToGrayscale(frame);
     cv::equalizeHist(resultFrame, resultFrame);
     GaussianBlur(resultFrame, resultFrame, cv::Size(5, 5), 0);
-    cv::threshold(resultFrame, resultFrame, 225, 255, cv::THRESH_BINARY);
+    cv::threshold(resultFrame, resultFrame, 235, 255, cv::THRESH_BINARY);
     resultFrame = autoCanny(resultFrame);
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
     cv::morphologyEx(resultFrame, resultFrame, cv::MORPH_CLOSE, kernel);
     resultFrame = cropRoiFromFrame(resultFrame);
     return resultFrame;
@@ -60,7 +63,7 @@ void drawDetectedLines(cv::Mat& image, const std::vector<cv::Vec4i>& lines, cv::
 
 std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
     std::vector<cv::Vec4i> detectedLines;
-    cv::HoughLinesP(processedFrame, detectedLines, 1, CV_PI / 180, 20, 20, 3);
+    cv::HoughLinesP(processedFrame, detectedLines, 1, CV_PI / 180, 40, 30, 3);
 
     cv::Mat frame(processedFrame);
     drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
@@ -121,7 +124,7 @@ double RoadLaneDetectorCanny::calculateDecentering(const int& imageCols, const i
     return decentering;
 }
 
-int RoadLaneDetectorCanny::getXPosition(const cv::Mat& frame) {
+int RoadLaneDetectorCanny::getXPosition() {
     return xPosition;
 }
 
@@ -139,4 +142,28 @@ void RoadLaneDetectorCanny::processFrame(const cv::Mat frame) {
     findLanes();
     if (rightVerticalLaneDetected && leftVerticalLaneDetected)
         xPosition = calculateDecentering(frame.cols, frame.rows);
+}
+
+cv::Vec4i RoadLaneDetectorCanny::getRightVerticalLane() {
+    return rightVerticalLane;
+}
+
+cv::Vec4i RoadLaneDetectorCanny::getLeftVerticalLane() {
+    return leftVerticalLane;
+}
+
+cv::Vec4i RoadLaneDetectorCanny::getTopHorizontalLane() {
+    return topHorizontalLane;
+}
+
+bool RoadLaneDetectorCanny::isRightVerticalLaneDetected() {
+    return rightVerticalLaneDetected;
+}
+
+bool RoadLaneDetectorCanny::isLeftVerticalLaneDetected() {
+    return leftVerticalLaneDetected;
+}
+
+bool RoadLaneDetectorCanny::isTopHorizontalLaneDetected() {
+    return topHorizontalLaneDetected;
 }

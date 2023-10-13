@@ -17,6 +17,15 @@ void drawLine(cv::Mat& image, double vx, double vy, double x0, double y0, cv::Sc
     cv::line(image, startPoint, endPoint, color, thickness);
 }
 
+void drawHorizontalLine(cv::Mat& image, double vx, double vy, double x0, double y0, cv::Scalar color, int thickness = 2) {
+    float y1 = y0 + (0 - x0) * vy / vx;
+    float y2 = y0 + (image.cols - 1 - x0) * vy / vx;
+
+    cv::Point2f startPoint(0, y1);
+    cv::Point2f endPoint(image.cols - 1, y2);
+    cv::line(image, startPoint, endPoint, color, thickness);
+}
+
 volatile bool shouldExit = false;
 
 void signalHandler(int signum) {
@@ -58,61 +67,84 @@ int main() {
     int frameCount = 0;  // Initialize frame count
     bool stopCar = false;
     steeringClient.start();
-    // steeringClient.driveForward(35);
+    steeringClient.driveForward(25);
     // std::this_thread::sleep_for(std::chrono::seconds(5));
     // steeringClient.stop();
     int decenteredPixels;
-    std::pair<cv::Vec4i, cv::Vec4i> lanes;
+    cv::Vec4i rightLane, leftLane, horizontalLane;
     while (true) {
         if (!camera.readFrame()) {
             std::cerr << "Error: Could not read frame." << std::endl;
             break;
         }
 
-        try {
-            roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
-            decenteredPixels = roadLaneDetectorCanny.getXPosition(camera.getCurrentFrame());
-            lanes = roadLaneDetectorCanny.getLanes();
-
-        } catch (std::runtime_error er) {
-            er.what();
-            continue;
+        roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
+        if (roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
+            rightLane = roadLaneDetectorCanny.getRightVerticalLane();
+        }
+        if (roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
+            leftLane = roadLaneDetectorCanny.getLeftVerticalLane();
+        }
+        if (roadLaneDetectorCanny.isTopHorizontalLaneDetected()) {
+            horizontalLane = roadLaneDetectorCanny.getTopHorizontalLane();
+        }
+        if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
+            decenteredPixels = roadLaneDetectorCanny.getXPosition();
         }
 
         // Display current action on the frame
         std::string actionText = "Action: ";
-        // if (!stopCar) {
-        if (decenteredPixels != decenteredPixels) {
-            actionText += "Nan";
-            steeringClient.turnRight(80);
-        } else if (std::abs(decenteredPixels) <= 10) {
-            actionText += "Centering";
-            steeringClient.center();
-        } else {
-            if (decenteredPixels > 0) {
+
+        if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
+            if (std::abs(decenteredPixels) <= 15) {
+                actionText += "Centering";
+                steeringClient.center();
+            } else if (decenteredPixels > 0) {
                 actionText += "Turning right";
-                steeringClient.turnRight(80);
+                steeringClient.turnRight(60);
             } else {
                 actionText += "Turning left";
-                steeringClient.turnLeft(80);
+                steeringClient.turnLeft(60);
             }
+        } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isTopHorizontalLaneDetected()) {
+            steeringClient.turnLeft(100);
+            actionText += "Turning left (turn detected)";
+        }   else {
+            // steeringClient.stop(80);
         }
+
+        // if (decenteredPixels != decenteredPixels) {
+        //     actionText += "Nan";
+        //     steeringClient.turnRight(80);
+        // } else if (std::abs(decenteredPixels) <= 10) {
+        //     actionText += "Centering";
+        //     steeringClient.center();
+        // } else {
+        //     if (decenteredPixels > 0) {
+        //         actionText += "Turning right";
+        //         steeringClient.turnRight(80);
+        //     } else {
+        //         actionText += "Turning left";
+        //         steeringClient.turnLeft(80);
+        //     }
+        // }
         cv::Mat frame = camera.getCurrentFrame();
-        std::cout << distanceClient.getDistance() << std::endl;
-        drawLine(frame, lanes.first[0], lanes.first[1], lanes.first[2], lanes.first[3], cv::Scalar(255, 255, 255));
-        drawLine(frame, lanes.second[0], lanes.second[1], lanes.second[2], lanes.second[3], cv::Scalar(255, 255, 255));
-        cv::putText(
-            frame,  // Target image
-            "distance: " +
-                std::to_string((int)distanceClient.getDistance()) +
-                "cm",                   // Text to be added
-            cv::Point(10, 120),         // Position
-            cv::FONT_HERSHEY_SIMPLEX,   // Font type
-            1.0,                        // Font scale
-            cv::Scalar(255, 255, 255),  // Text color (white)
-            2,                          // Text thickness
-            cv::LINE_AA                 // Line type
-        );
+
+        drawLine(frame, rightLane[0], rightLane[1], rightLane[2], rightLane[3], cv::Scalar(255, 255, 255));
+        drawLine(frame, leftLane[0], leftLane[1], leftLane[2], leftLane[3], cv::Scalar(255, 255, 255));
+        drawHorizontalLine(frame, horizontalLane[0], horizontalLane[1], horizontalLane[2], horizontalLane[3], cv::Scalar(255, 255, 255));
+        // cv::putText(
+        //     frame,  // Target image
+        //     "distance: " +
+        //         std::to_string((int)distanceClient.getDistance()) +
+        //         "cm",                   // Text to be added
+        //     cv::Point(10, 120),         // Position
+        //     cv::FONT_HERSHEY_SIMPLEX,   // Font type
+        //     1.0,                        // Font scale
+        //     cv::Scalar(255, 255, 255),  // Text color (white)
+        //     2,                          // Text thickness
+        //     cv::LINE_AA                 // Line type
+        // );
 
         cv::putText(
             frame,                      // Target image

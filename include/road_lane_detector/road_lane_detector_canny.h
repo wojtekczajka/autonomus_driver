@@ -6,8 +6,14 @@ class RoadLaneDetectorCanny {
    public:
     RoadLaneDetectorCanny();
     void processFrame(const cv::Mat frame);
-    int getXPosition(const cv::Mat& frame);
+    bool isRightVerticalLaneDetected();
+    bool isLeftVerticalLaneDetected();
+    bool isTopHorizontalLaneDetected();
+    int getXPosition();
     std::pair<cv::Vec4i, cv::Vec4i> getLanes();
+    cv::Vec4i getRightVerticalLane();
+    cv::Vec4i getLeftVerticalLane();
+    cv::Vec4i getTopHorizontalLane();
 
    private:
     void findLanes();
@@ -18,7 +24,7 @@ class RoadLaneDetectorCanny {
 
     bool leftVerticalLaneDetected, rightVerticalLaneDetected, topHorizontalLaneDetected;
     int xPosition;
-    std::vector<cv::Point> trianglePoints;
+    std::vector<cv::Point> rightMaskTrianglePoints, leftMaskTrianglePoints;
     std::vector<cv::Point> rightPoints, leftPoints, horizontalPoints;
     cv::Mat mask;
     cv::Rect maskedTopRectangle;
