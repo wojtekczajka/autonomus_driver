@@ -6,8 +6,8 @@ RoadLaneDetectorCanny::RoadLaneDetectorCanny() : xPosition(0),
                                                  topHorizontalLaneDetected(false),
                                                  mask(cv::Mat::zeros(cv::Size(640, 368), CV_8U)),
                                                  leftMaskTrianglePoints({cv::Point(0, 0), cv::Point(0, 368 * 0.8), cv::Point(640 / 2, 0)}),
-                                                 rightMaskTrianglePoints({cv::Point(640, 0), cv::Point(static_cast<int>(640 * 0.7), 0), cv::Point(640, 368 * 0.8)}),
-                                                 maskedTopRectangle(0, 0, 640, static_cast<int>(368 * 0.4)),
+                                                 rightMaskTrianglePoints({cv::Point(640, 0), cv::Point(640, 0), cv::Point(640, 368 * 0.8)}),
+                                                 maskedTopRectangle(0, 0, 640, static_cast<int>(368 * 0.3)),
                                                  maskedBottomRectangle(0, static_cast<int>(368 * 0.9), 640, static_cast<int>(368 * 0.1)),
                                                  maskedLeftRectangle(0, 0, static_cast<int>(640 * 0.1), 368) {}
 
@@ -31,27 +31,29 @@ cv::Mat autoCanny(const cv::Mat& frame, double sigma = 0.33) {
 
 cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     cv::Mat croppedFrame = frame.clone();
-
-    cv::fillConvexPoly(mask, leftMaskTrianglePoints, cv::Scalar(255));
-    cv::fillConvexPoly(mask, rightMaskTrianglePoints, cv::Scalar(255));
-
-    croppedFrame.setTo(0, mask);
-    croppedFrame(maskedTopRectangle) = cv::Scalar(0);
-    croppedFrame(maskedBottomRectangle) = cv::Scalar(0);
-    croppedFrame(maskedLeftRectangle) = cv::Scalar(0);
+    cv::Point center(croppedFrame.cols / 2, croppedFrame.rows + 20);
+    cv::Mat mask = cv::Mat::ones(frame.size(), CV_8U) * 255; // Initialize with all white
+    int radius = 600 / 2;
+    cv::circle(mask, center, radius, cv::Scalar(0), -1);
+    croppedFrame.setTo(cv::Scalar(0), mask);
 
     return croppedFrame;
 }
 
 cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
+    
     cv::Mat resultFrame = convertFrameToGrayscale(frame);
+    // cv::imshow("cropRoiFromFrame(resultFrame);", cropRoiFromFrame(resultFrame));
     cv::equalizeHist(resultFrame, resultFrame);
     GaussianBlur(resultFrame, resultFrame, cv::Size(5, 5), 0);
     cv::threshold(resultFrame, resultFrame, 235, 255, cv::THRESH_BINARY);
+    // cv::imshow("thresh", resultFrame);
+
     resultFrame = autoCanny(resultFrame);
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
-    cv::morphologyEx(resultFrame, resultFrame, cv::MORPH_CLOSE, kernel);
+    // cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
+    // cv::morphologyEx(resultFrame, resultFrame, cv::MORPH_CLOSE, kernel);
     resultFrame = cropRoiFromFrame(resultFrame);
+    // cv::imshow("result", resultFrame);
     return resultFrame;
 }
 
@@ -63,7 +65,7 @@ void drawDetectedLines(cv::Mat& image, const std::vector<cv::Vec4i>& lines, cv::
 
 std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
     std::vector<cv::Vec4i> detectedLines;
-    cv::HoughLinesP(processedFrame, detectedLines, 1, CV_PI / 180, 40, 30, 3);
+    cv::HoughLinesP(processedFrame, detectedLines, 1, CV_PI / 180, 30, 30, 250);
 
     cv::Mat frame(processedFrame);
     drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));

@@ -1,5 +1,5 @@
-#include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
 
 using namespace cv;
 
@@ -16,22 +16,28 @@ int main() {
 
     namedWindow("Video", WINDOW_AUTOSIZE);
 
-    int minHue = 0, maxHue = 30;
-    int minSat = 100, maxSat = 255;
-    int minValue = 100, maxValue = 255;
+    int minHue = 0, maxHue = 0;
+    int minSat = 0, maxSat = 0;
+    int minValue = 0, maxValue = 255;
 
-    createTrackbar("Min Hue", "Video", &minHue, 179);
-    createTrackbar("Max Hue", "Video", &maxHue, 23);
+    createTrackbar("Min Hue", "Video", &minHue, 255);
+    createTrackbar("Max Hue", "Video", &maxHue, 255);
     createTrackbar("Min Saturation", "Video", &minSat, 255);
     createTrackbar("Max Saturation", "Video", &maxSat, 255);
-    createTrackbar("Min Value", "Video", &minValue, 40);
+    createTrackbar("Min Value", "Video", &minValue, 255);
     createTrackbar("Max Value", "Video", &maxValue, 255);
 
     Mat frame, hsvFrame, mask;
 
     while (true) {
-        cap >> frame; 
-
+        cap >> frame;
+        std::vector<cv::Mat> channels;
+        cv::split(frame, channels);
+        for (int i = 0; i < 3; i++) {
+            cv::equalizeHist(channels[i], channels[i]);
+        }
+        
+        cv::merge(channels, frame);
         cvtColor(frame, hsvFrame, COLOR_BGR2HSV);
         inRange(hsvFrame, Scalar(minHue, minSat, minValue), Scalar(maxHue, maxSat, maxValue), mask);
         Mat result;

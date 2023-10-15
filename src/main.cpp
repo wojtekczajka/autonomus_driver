@@ -67,7 +67,7 @@ int main() {
     int frameCount = 0;  // Initialize frame count
     bool stopCar = false;
     steeringClient.start();
-    steeringClient.driveForward(25);
+    // steeringClient.driveForward(25);
     // std::this_thread::sleep_for(std::chrono::seconds(5));
     // steeringClient.stop();
     int decenteredPixels;
@@ -96,7 +96,7 @@ int main() {
         std::string actionText = "Action: ";
 
         if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
-            if (std::abs(decenteredPixels) <= 15) {
+            if (std::abs(decenteredPixels) <= 10) {
                 actionText += "Centering";
                 steeringClient.center();
             } else if (decenteredPixels > 0) {
@@ -109,8 +109,9 @@ int main() {
         } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isTopHorizontalLaneDetected()) {
             steeringClient.turnLeft(100);
             actionText += "Turning left (turn detected)";
-        }   else {
-            // steeringClient.stop(80);
+        } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
+            steeringClient.turnLeft(100);
+            actionText += "workaround";
         }
 
         // if (decenteredPixels != decenteredPixels) {
@@ -145,6 +146,39 @@ int main() {
         //     2,                          // Text thickness
         //     cv::LINE_AA                 // Line type
         // );
+
+        cv::putText(
+            frame,                                                                                           // Target image
+            "center line detected: " + std::to_string(roadLaneDetectorCanny.isTopHorizontalLaneDetected()),  // Text to be added
+            cv::Point(10, 180),                                                                              // Position
+            cv::FONT_HERSHEY_SIMPLEX,                                                                        // Font type
+            1.0,                                                                                             // Font scale
+            cv::Scalar(255, 255, 255),                                                                       // Text color (white)
+            2,                                                                                               // Text thickness
+            cv::LINE_AA                                                                                      // Line type
+        );
+
+        cv::putText(
+            frame,                                                                                          // Target image
+            "right line detected: " + std::to_string(roadLaneDetectorCanny.isRightVerticalLaneDetected()),  // Text to be added
+            cv::Point(10, 150),                                                                             // Position
+            cv::FONT_HERSHEY_SIMPLEX,                                                                       // Font type
+            1.0,                                                                                            // Font scale
+            cv::Scalar(255, 255, 255),                                                                      // Text color (white)
+            2,                                                                                              // Text thickness
+            cv::LINE_AA                                                                                     // Line type
+        );
+
+        cv::putText(
+            frame,                                                                                        // Target image
+            "left line detected: " + std::to_string(roadLaneDetectorCanny.isLeftVerticalLaneDetected()),  // Text to be added
+            cv::Point(10, 120),                                                                           // Position
+            cv::FONT_HERSHEY_SIMPLEX,                                                                     // Font type
+            1.0,                                                                                          // Font scale
+            cv::Scalar(255, 255, 255),                                                                    // Text color (white)
+            2,                                                                                            // Text thickness
+            cv::LINE_AA                                                                                   // Line type
+        );
 
         cv::putText(
             frame,                      // Target image
