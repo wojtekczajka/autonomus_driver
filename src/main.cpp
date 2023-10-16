@@ -7,6 +7,7 @@
 #include "distance/distance_client.h"
 #include "road_lane_detector/road_lane_detector_canny.h"
 #include "steering/steering_client.h"
+#include "steering/auto_pilot.h"
 
 void drawLine(cv::Mat& image, double vx, double vy, double x0, double y0, cv::Scalar color, int thickness = 2) {
     float x1 = x0 + (0 - y0) * vx / vy;
@@ -59,6 +60,7 @@ int main() {
     DistanceClient distanceClient("http://127.0.0.1:8000");
     SteeringClient steeringClient(logger);
     RoadLaneDetectorCanny roadLaneDetectorCanny;
+    AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient);
     // RoadLineDetector roadLineDetector(logger);
     if (!camera.isOpened()) {
         std::cerr << "Error: Couldn't open the camera." << std::endl;
@@ -67,7 +69,7 @@ int main() {
     int frameCount = 0;  // Initialize frame count
     bool stopCar = false;
     steeringClient.start();
-    // steeringClient.driveForward(25);
+    steeringClient.driveForward(38);
     // std::this_thread::sleep_for(std::chrono::seconds(5));
     // steeringClient.stop();
     int decenteredPixels;
@@ -93,26 +95,27 @@ int main() {
         }
 
         // Display current action on the frame
-        std::string actionText = "Action: ";
-
-        if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
-            if (std::abs(decenteredPixels) <= 10) {
-                actionText += "Centering";
-                steeringClient.center();
-            } else if (decenteredPixels > 0) {
-                actionText += "Turning right";
-                steeringClient.turnRight(60);
-            } else {
-                actionText += "Turning left";
-                steeringClient.turnLeft(60);
-            }
-        } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isTopHorizontalLaneDetected()) {
-            steeringClient.turnLeft(100);
-            actionText += "Turning left (turn detected)";
-        } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
-            steeringClient.turnLeft(100);
-            actionText += "workaround";
-        }
+        
+        autoPilot.controlSteering();
+        std::string actionText = "Action: " + autoPilot.getCurrentAction();
+        // if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
+        //     if (std::abs(decenteredPixels) <= 10) {
+        //         actionText += "Centering";
+        //         steeringClient.center();
+        //     } else if (decenteredPixels > 0) {
+        //         actionText += "Turning right";
+        //         steeringClient.turnRight(60);
+        //     } else {
+        //         actionText += "Turning left";
+        //         steeringClient.turnLeft(60);
+        //     }
+        // } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isTopHorizontalLaneDetected()) {
+        //     steeringClient.turnLeft(100);
+        //     actionText += "Turning left (turn detected)";
+        // } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
+        //     steeringClient.turnLeft(100);
+        //     actionText += "workaround";
+        // }
 
         // if (decenteredPixels != decenteredPixels) {
         //     actionText += "Nan";

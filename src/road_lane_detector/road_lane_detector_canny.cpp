@@ -68,8 +68,8 @@ std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
     cv::HoughLinesP(processedFrame, detectedLines, 1, CV_PI / 180, 30, 30, 250);
 
     cv::Mat frame(processedFrame);
-    drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
-    cv::imshow("lines", frame);
+    // drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
+    // cv::imshow("lines", frame);
 
     return detectedLines;
 }
