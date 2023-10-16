@@ -61,17 +61,13 @@ int main() {
     SteeringClient steeringClient(logger);
     RoadLaneDetectorCanny roadLaneDetectorCanny;
     AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient);
-    // RoadLineDetector roadLineDetector(logger);
     if (!camera.isOpened()) {
         std::cerr << "Error: Couldn't open the camera." << std::endl;
         return -1;
     }
     int frameCount = 0;  // Initialize frame count
-    bool stopCar = false;
     steeringClient.start();
-    steeringClient.driveForward(38);
-    // std::this_thread::sleep_for(std::chrono::seconds(5));
-    // steeringClient.stop();
+    // steeringClient.driveForward(38);
     int decenteredPixels;
     cv::Vec4i rightLane, leftLane, horizontalLane;
     while (true) {
@@ -98,57 +94,11 @@ int main() {
         
         autoPilot.controlSteering();
         std::string actionText = "Action: " + autoPilot.getCurrentAction();
-        // if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
-        //     if (std::abs(decenteredPixels) <= 10) {
-        //         actionText += "Centering";
-        //         steeringClient.center();
-        //     } else if (decenteredPixels > 0) {
-        //         actionText += "Turning right";
-        //         steeringClient.turnRight(60);
-        //     } else {
-        //         actionText += "Turning left";
-        //         steeringClient.turnLeft(60);
-        //     }
-        // } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isTopHorizontalLaneDetected()) {
-        //     steeringClient.turnLeft(100);
-        //     actionText += "Turning left (turn detected)";
-        // } else if (roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
-        //     steeringClient.turnLeft(100);
-        //     actionText += "workaround";
-        // }
-
-        // if (decenteredPixels != decenteredPixels) {
-        //     actionText += "Nan";
-        //     steeringClient.turnRight(80);
-        // } else if (std::abs(decenteredPixels) <= 10) {
-        //     actionText += "Centering";
-        //     steeringClient.center();
-        // } else {
-        //     if (decenteredPixels > 0) {
-        //         actionText += "Turning right";
-        //         steeringClient.turnRight(80);
-        //     } else {
-        //         actionText += "Turning left";
-        //         steeringClient.turnLeft(80);
-        //     }
-        // }
         cv::Mat frame = camera.getCurrentFrame();
 
         drawLine(frame, rightLane[0], rightLane[1], rightLane[2], rightLane[3], cv::Scalar(255, 255, 255));
         drawLine(frame, leftLane[0], leftLane[1], leftLane[2], leftLane[3], cv::Scalar(255, 255, 255));
         drawHorizontalLine(frame, horizontalLane[0], horizontalLane[1], horizontalLane[2], horizontalLane[3], cv::Scalar(255, 255, 255));
-        // cv::putText(
-        //     frame,  // Target image
-        //     "distance: " +
-        //         std::to_string((int)distanceClient.getDistance()) +
-        //         "cm",                   // Text to be added
-        //     cv::Point(10, 120),         // Position
-        //     cv::FONT_HERSHEY_SIMPLEX,   // Font type
-        //     1.0,                        // Font scale
-        //     cv::Scalar(255, 255, 255),  // Text color (white)
-        //     2,                          // Text thickness
-        //     cv::LINE_AA                 // Line type
-        // );
 
         cv::putText(
             frame,                                                                                           // Target image
