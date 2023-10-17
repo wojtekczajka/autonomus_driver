@@ -60,14 +60,14 @@ int main() {
     DistanceClient distanceClient("http://127.0.0.1:8000");
     SteeringClient steeringClient(logger);
     RoadLaneDetectorCanny roadLaneDetectorCanny;
-    AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient);
+    AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient, distanceClient);
     if (!camera.isOpened()) {
         std::cerr << "Error: Couldn't open the camera." << std::endl;
         return -1;
     }
     int frameCount = 0;  // Initialize frame count
     steeringClient.start();
-    // steeringClient.driveForward(38);
+    // steeringClient.driveForward(40);
     int decenteredPixels;
     cv::Vec4i rightLane, leftLane, horizontalLane;
     while (true) {
@@ -170,6 +170,9 @@ int main() {
 
         cv::imshow("Camera Frame", frame);
         videoWriter.write(frame);
+
+        if (frameCount % 10 == 0)
+            std::cout << distanceClient.getDistance();
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {
             break;

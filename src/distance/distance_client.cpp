@@ -1,11 +1,14 @@
+#include "distance/distance_client.h"
+
 #include <curl/curl.h>
 
 #include <iostream>
 
-#include "distance/distance_client.h"
-
 DistanceClient::DistanceClient(const std::string& baseUrl) : baseUrl(baseUrl) {
     curl = curl_easy_init();
+    std::string url = baseUrl + "/get_distance/";
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 }
 
 DistanceClient::~DistanceClient() {
@@ -17,29 +20,23 @@ DistanceClient::~DistanceClient() {
 double DistanceClient::getDistance() {
     if (!curl) {
         std::cerr << "Curl initialization failed." << std::endl;
-        return -1.0; // Error value
+        return -1.0;
     }
-
-    std::string url = baseUrl + "/get_distance/";
-
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-
+    std::string text;
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &text);
     CURLcode res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {
         std::cerr << "HTTP request failed: " << curl_easy_strerror(res) << std::endl;
-        return -1.0; // Error value
+        return -1.0;
     }
 
     try {
-        // Convert the response to a double
-        double distance = std::stod(response);
+        double distance = std::stod(text);
         return distance;
     } catch (const std::exception& e) {
         std::cerr << "Error parsing distance: " << e.what() << std::endl;
-        return -1.0; // Error value
+        return -1.0;
     }
 }
 

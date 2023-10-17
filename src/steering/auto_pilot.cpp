@@ -1,10 +1,15 @@
 #include "steering/auto_pilot.h"
 
-AutoPilot::AutoPilot(RoadLaneDetectorCanny& detector, SteeringClient& client)
-    : roadLaneDetector(detector), steeringClient(client) {
+AutoPilot::AutoPilot(RoadLaneDetectorCanny& detector, SteeringClient& steeringClient, DistanceClient& distanceClient)
+    : roadLaneDetector(detector), steeringClient(steeringClient), distanceClient(distanceClient) {
 }
 
 void AutoPilot::controlSteering() {
+    if (isColissionDetected()) {
+        steeringClient.stop();
+        std::cout << "colission detected: " << distanceClient.getDistance() << std::endl;
+        return;
+    }
     int decenteredPixels = roadLaneDetector.getXPosition();
     if (roadLaneDetector.isRightVerticalLaneDetected() && roadLaneDetector.isLeftVerticalLaneDetected()) {
         if (std::abs(decenteredPixels) <= 10) {
@@ -17,10 +22,15 @@ void AutoPilot::controlSteering() {
             currentAction = "correction left";
             steeringClient.turnLeft(40);
         }
+        steeringClient.driveForward(40);
     } else if (roadLaneDetector.isRightVerticalLaneDetected()) {
         steeringClient.turnLeft(100);
         currentAction = "making turn left";
     }
+}
+
+bool AutoPilot::isColissionDetected() {
+    return distanceClient.getDistance() < 30;
 }
 
 std::string AutoPilot::getCurrentAction() {
