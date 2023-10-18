@@ -16,6 +16,5 @@ class DistanceClient {
 
     std::string baseUrl;
     CURL* curl;
-    std::string response;
     double distance;
 };

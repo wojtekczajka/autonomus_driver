@@ -1,15 +1,20 @@
 #include "road_lane_detector/road_lane_detector_canny.h"
 
+#include "common/config_parser.h"
+
 RoadLaneDetectorCanny::RoadLaneDetectorCanny() : xPosition(0),
                                                  rightVerticalLaneDetected(false),
                                                  leftVerticalLaneDetected(false),
-                                                 topHorizontalLaneDetected(false),
-                                                 mask(cv::Mat::zeros(cv::Size(640, 368), CV_8U)),
-                                                 leftMaskTrianglePoints({cv::Point(0, 0), cv::Point(0, 368 * 0.8), cv::Point(640 / 2, 0)}),
-                                                 rightMaskTrianglePoints({cv::Point(640, 0), cv::Point(640, 0), cv::Point(640, 368 * 0.8)}),
-                                                 maskedTopRectangle(0, 0, 640, static_cast<int>(368 * 0.3)),
-                                                 maskedBottomRectangle(0, static_cast<int>(368 * 0.9), 640, static_cast<int>(368 * 0.1)),
-                                                 maskedLeftRectangle(0, 0, static_cast<int>(640 * 0.1), 368) {}
+                                                 topHorizontalLaneDetected(false) {
+    ConfigParser configParser("camera_config.txt");
+    frameWidth = configParser.getValue<int>("FRAME_WIDTH", 640);
+    frameHeight = configParser.getValue<int>("FRAME_HEIGHT", 368);
+    int radius = frameWidth / 2;
+    topCircleMask = cv::Mat::ones(cv::Point(frameWidth, frameHeight), CV_8U) * 255;
+    cv::circle(topCircleMask, cv::Point(frameWidth / 2, frameHeight + 20), radius, cv::Scalar(0), -1);
+    bottomCircleMask = cv::Mat::zeros(cv::Point(frameWidth, frameHeight), CV_8U);
+    cv::circle(bottomCircleMask, cv::Point(frameWidth / 2, frameHeight), radius / 3.5, cv::Scalar(255), -1);
+}
 
 cv::Mat convertFrameToGrayscale(const cv::Mat& frame) {
     cv::Mat grayscaleFrame;
@@ -31,29 +36,22 @@ cv::Mat autoCanny(const cv::Mat& frame, double sigma = 0.33) {
 
 cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     cv::Mat croppedFrame = frame.clone();
-    cv::Point center(croppedFrame.cols / 2, croppedFrame.rows + 20);
-    cv::Mat mask = cv::Mat::ones(frame.size(), CV_8U) * 255; // Initialize with all white
-    int radius = 600 / 2;
-    cv::circle(mask, center, radius, cv::Scalar(0), -1);
-    croppedFrame.setTo(cv::Scalar(0), mask);
+    croppedFrame.setTo(cv::Scalar(0), topCircleMask);    
+    croppedFrame.setTo(cv::Scalar(0), bottomCircleMask);
 
     return croppedFrame;
 }
 
 cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
-    
     cv::Mat resultFrame = convertFrameToGrayscale(frame);
-    // cv::imshow("cropRoiFromFrame(resultFrame);", cropRoiFromFrame(resultFrame));
+    cv::imshow("cropped frame", cropRoiFromFrame(resultFrame));
     cv::equalizeHist(resultFrame, resultFrame);
     GaussianBlur(resultFrame, resultFrame, cv::Size(5, 5), 0);
     cv::threshold(resultFrame, resultFrame, 235, 255, cv::THRESH_BINARY);
-    // cv::imshow("thresh", resultFrame);
 
     resultFrame = autoCanny(resultFrame);
-    // cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
-    // cv::morphologyEx(resultFrame, resultFrame, cv::MORPH_CLOSE, kernel);
     resultFrame = cropRoiFromFrame(resultFrame);
-    // cv::imshow("result", resultFrame);
+    
     return resultFrame;
 }
 
@@ -99,11 +97,11 @@ void RoadLaneDetectorCanny::classifyPoints(const std::vector<cv::Vec4i>& lines) 
 
 void RoadLaneDetectorCanny::findLanes() {
     if (rightVerticalLaneDetected)
-        fitLine(rightPoints, rightVerticalLane, cv::DIST_L2, 0, 0.01, 0.01);
+        cv::fitLine(rightPoints, rightVerticalLane, cv::DIST_L2, 0, 0.01, 0.01);
     if (leftVerticalLaneDetected)
-        fitLine(leftPoints, leftVerticalLane, cv::DIST_L2, 0, 0.01, 0.01);
+        cv::fitLine(leftPoints, leftVerticalLane, cv::DIST_L2, 0, 0.01, 0.01);
     if (topHorizontalLaneDetected)
-        fitLine(horizontalPoints, topHorizontalLane, cv::DIST_L2, 0, 0.01, 0.01);
+        cv::fitLine(horizontalPoints, topHorizontalLane, cv::DIST_L2, 0, 0.01, 0.01);
 }
 
 void calculateIntersection(const cv::Vec4i& line, double y, double& x) {

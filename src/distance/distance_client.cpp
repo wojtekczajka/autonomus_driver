@@ -22,8 +22,8 @@ double DistanceClient::getDistance() {
         std::cerr << "Curl initialization failed." << std::endl;
         return -1.0;
     }
-    std::string text;
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &text);
+    std::string response;
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
     CURLcode res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {
@@ -32,7 +32,7 @@ double DistanceClient::getDistance() {
     }
 
     try {
-        double distance = std::stod(text);
+        double distance = std::stod(response);
         return distance;
     } catch (const std::exception& e) {
         std::cerr << "Error parsing distance: " << e.what() << std::endl;

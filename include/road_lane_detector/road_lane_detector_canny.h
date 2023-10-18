@@ -23,12 +23,8 @@ class RoadLaneDetectorCanny {
     void classifyPoints(const std::vector<cv::Vec4i>& lines);
 
     bool leftVerticalLaneDetected, rightVerticalLaneDetected, topHorizontalLaneDetected;
-    int xPosition;
-    std::vector<cv::Point> rightMaskTrianglePoints, leftMaskTrianglePoints;
+    int xPosition, frameWidth, frameHeight;
     std::vector<cv::Point> rightPoints, leftPoints, horizontalPoints;
-    cv::Mat mask;
-    cv::Rect maskedTopRectangle;
-    cv::Rect maskedBottomRectangle;
-    cv::Rect maskedLeftRectangle;
+    cv::Mat topCircleMask, bottomCircleMask;
     cv::Vec4i leftVerticalLane, rightVerticalLane, topHorizontalLane;
 };

@@ -1,7 +1,7 @@
 #include "steering/auto_pilot.h"
 
-AutoPilot::AutoPilot(RoadLaneDetectorCanny& detector, SteeringClient& steeringClient, DistanceClient& distanceClient)
-    : roadLaneDetector(detector), steeringClient(steeringClient), distanceClient(distanceClient) {
+AutoPilot::AutoPilot(RoadLaneDetectorCanny& detector, SteeringClient& steeringClient, DistanceClient& distanceClient, Logger& logger)
+    : roadLaneDetector(detector), steeringClient(steeringClient), distanceClient(distanceClient), logger(logger) {
 }
 
 void AutoPilot::controlSteering() {
@@ -22,10 +22,10 @@ void AutoPilot::controlSteering() {
             currentAction = "correction left";
             steeringClient.turnLeft(40);
         }
-        steeringClient.driveForward(40);
+        steeringClient.driveForward(35);
     } else if (roadLaneDetector.isRightVerticalLaneDetected()) {
         steeringClient.turnLeft(100);
-        steeringClient.driveForward(45);
+        steeringClient.driveForward(42);
         currentAction = "making turn left";
     }
 }
