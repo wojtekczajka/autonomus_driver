@@ -1,4 +1,0 @@
-/home/ubuntu/git-repos/autonomus_driver/build/CMakeFiles/rebuild_cache.dir
-/home/ubuntu/git-repos/autonomus_driver/build/CMakeFiles/hsvTest.dir
-/home/ubuntu/git-repos/autonomus_driver/build/CMakeFiles/edit_cache.dir
-/home/ubuntu/git-repos/autonomus_driver/build/CMakeFiles/autonomus_driver.dir
