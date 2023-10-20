@@ -26,7 +26,8 @@ void Camera::setCameraConfig() {
     ConfigParser configParser("camera_config.txt");
     int frameWidth = configParser.getValue<int>("FRAME_WIDTH", 640);
     int frameHeihgt = configParser.getValue<int>("FRAME_HEIGHT", 368);
-    int propFPS = configParser.getValue<int>("PROP_FPS", 30);
+    int propFPS = configParser.getValue<int>("PROP_FPS", 15);
+    int propExsposure = configParser.getValue<double>("PROP_EXPOSURE", 0.75);
 
     cap.set(cv::CAP_PROP_FRAME_WIDTH, frameWidth);
     logger.info(fmt::format("VIDEO CAPTURE FRAME WIDTH SET TO: {}", frameWidth));
@@ -36,6 +37,9 @@ void Camera::setCameraConfig() {
 
     cap.set(cv::CAP_PROP_FPS, propFPS);
     logger.info(fmt::format("VIDEO CAPTURE PROP FPS SET TO: {}", propFPS));
+
+    cap.set(cv::CAP_PROP_EXPOSURE, propExsposure);
+    logger.info(fmt::format("VIDEO CAPTURE PROP EXPOSURE SET TO: {}", propExsposure));
 }
 
 cv::Mat Camera::getCurrentFrame() const {

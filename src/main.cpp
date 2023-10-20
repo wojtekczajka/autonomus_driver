@@ -54,7 +54,7 @@ int main() {
     signal(SIGINT, signalHandler);
     std::string outputVideoFile = "output_video.avi";
     int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
-    cv::VideoWriter videoWriter(outputVideoFile, fourcc, 30, cv::Size(640, 368), true);
+    cv::VideoWriter videoWriter(outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
     Logger logger("/dev/null");
     Camera camera(logger);
     DistanceClient distanceClient("http://127.0.0.1:8000");
