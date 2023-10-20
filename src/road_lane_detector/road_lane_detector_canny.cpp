@@ -36,17 +36,47 @@ cv::Mat autoCanny(const cv::Mat& frame, double sigma = 0.33) {
 
 cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     cv::Mat croppedFrame = frame.clone();
-    croppedFrame.setTo(cv::Scalar(0), topCircleMask);    
+    croppedFrame.setTo(cv::Scalar(0), topCircleMask);
     croppedFrame.setTo(cv::Scalar(0), bottomCircleMask);
 
     return croppedFrame;
 }
 
+
+void filterEdges(cv::Mat& edgedFrame, const cv::Mat& greyScaleImage) {
+    for (int y = 0; y < edgedFrame.rows; y++) {
+        for (int x = 0; x < edgedFrame.cols; x++) {
+            if (edgedFrame.at<uchar>(y, x) > 0) {
+                int i = 1;
+                bool flag = true;
+                while (greyScaleImage.at<uchar>(y, x - i) == greyScaleImage.at<uchar>(y, x + i)) {
+                    if (i > 10) {
+                        edgedFrame.at<uchar>(y, x) = 0;
+                        flag = false;
+                        break;
+                    }
+                    ++i;
+                }
+                if (flag) {
+                    if (greyScaleImage.at<uchar>(y, x - i) < greyScaleImage.at<uchar>(y, x + i)) {
+                        edgedFrame.at<uchar>(y, x) = 0;
+                    }
+                }
+                if (edgedFrame.at<uchar>(y, x - i) == edgedFrame.at<uchar>(y, x + i))
+                    edgedFrame.at<uchar>(y, x) = 0;
+            }
+        }
+    }
+}
+
 cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
-    cv::Mat resultFrame = convertFrameToGrayscale(frame);
-    cv::medianBlur(resultFrame, resultFrame, 11);
+    cv::Mat greyFrame = convertFrameToGrayscale(frame);
+
+    cv::medianBlur(greyFrame, greyFrame, 11);
+    cv::Mat resultFrame = greyFrame;
     resultFrame = autoCanny(resultFrame);
     resultFrame = cropRoiFromFrame(resultFrame);
+    filterEdges(resultFrame, greyFrame);
     return resultFrame;
 }
 
@@ -59,9 +89,9 @@ void drawDetectedLines(cv::Mat& image, const std::vector<cv::Vec4i>& lines, cv::
 std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
     std::vector<cv::Vec4i> detectedLines;
     cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 180, 90, 1, 150);
-    // cv::Mat frame(processedFrame);
-    // drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
-    // cv::imshow("lines", frame);
+    cv::Mat frame(processedFrame);
+    drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
+    cv::imshow("lines", frame);
     return detectedLines;
 }
 
