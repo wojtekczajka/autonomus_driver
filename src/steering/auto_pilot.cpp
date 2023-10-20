@@ -17,10 +17,10 @@ void AutoPilot::controlSteering() {
             steeringClient.center();
         } else if (decenteredPixels > 0) {
             currentAction = "correction right";
-            steeringClient.turnRight(40);
+            steeringClient.turnRight(25);
         } else {
             currentAction = "correction left";
-            steeringClient.turnLeft(40);
+            steeringClient.turnLeft(25);
         }
         steeringClient.driveForward(35);
     } else if (roadLaneDetector.isRightVerticalLaneDetected()) {

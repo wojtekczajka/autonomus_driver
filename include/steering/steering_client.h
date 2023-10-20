@@ -1,9 +1,7 @@
 #pragma once
 
 #include <curl/curl.h>
-
 #include <string>
-
 #include "common/logger.h"
 
 class SteeringClient {
@@ -13,9 +11,9 @@ class SteeringClient {
 
     bool start();
     bool stop();
+    bool center();
     bool turnLeft(int value);
     bool turnRight(int value);
-    bool center();
     bool driveForward(int value);
     bool driveBackward(int value);
 

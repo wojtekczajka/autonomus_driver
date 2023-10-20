@@ -44,14 +44,9 @@ cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
 
 cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
     cv::Mat resultFrame = convertFrameToGrayscale(frame);
-    cv::imshow("cropped frame", cropRoiFromFrame(resultFrame));
-    cv::equalizeHist(resultFrame, resultFrame);
-    GaussianBlur(resultFrame, resultFrame, cv::Size(5, 5), 0);
-    cv::threshold(resultFrame, resultFrame, 235, 255, cv::THRESH_BINARY);
-
+    cv::medianBlur(resultFrame, resultFrame, 11);
     resultFrame = autoCanny(resultFrame);
     resultFrame = cropRoiFromFrame(resultFrame);
-    
     return resultFrame;
 }
 
@@ -63,12 +58,10 @@ void drawDetectedLines(cv::Mat& image, const std::vector<cv::Vec4i>& lines, cv::
 
 std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
     std::vector<cv::Vec4i> detectedLines;
-    cv::HoughLinesP(processedFrame, detectedLines, 1, CV_PI / 180, 30, 30, 250);
-
-    cv::Mat frame(processedFrame);
+    cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 180, 90, 1, 150);
+    // cv::Mat frame(processedFrame);
     // drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
     // cv::imshow("lines", frame);
-
     return detectedLines;
 }
 
