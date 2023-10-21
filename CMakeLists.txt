@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenCV REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(CURL REQUIRED)
 
 file(COPY "src/camera/camera_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY "src/steering/curl_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
@@ -29,7 +28,7 @@ add_executable(hsvTest
 
 target_link_libraries(hsvTest ${OpenCV_LIBS})
 
-target_link_libraries(autonomus_driver ${OpenCV_LIBS} CURL::libcurl)
+target_link_libraries(autonomus_driver ${OpenCV_LIBS})
 
 target_include_directories(autonomus_driver PRIVATE
     include     
