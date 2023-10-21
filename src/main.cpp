@@ -168,7 +168,7 @@ int main() {
             cv::LINE_AA                 // Line type
         );
 
-        cv::imshow("Camera Frame", frame);
+        // cv::imshow("Camera Frame", frame);
         videoWriter.write(frame);
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {

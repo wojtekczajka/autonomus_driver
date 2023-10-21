@@ -42,41 +42,57 @@ cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     return croppedFrame;
 }
 
-
-void filterEdges(cv::Mat& edgedFrame, const cv::Mat& greyScaleImage) {
+cv::Mat findLaneInsideEdges(const cv::Mat& edgedFrame, const cv::Mat& grayFrame) {
+    cv::Mat toReturn = edgedFrame;
+    int distance = 5;
     for (int y = 0; y < edgedFrame.rows; y++) {
         for (int x = 0; x < edgedFrame.cols; x++) {
             if (edgedFrame.at<uchar>(y, x) > 0) {
-                int i = 1;
-                bool flag = true;
-                while (greyScaleImage.at<uchar>(y, x - i) == greyScaleImage.at<uchar>(y, x + i)) {
-                    if (i > 10) {
-                        edgedFrame.at<uchar>(y, x) = 0;
-                        flag = false;
-                        break;
-                    }
-                    ++i;
+                if (grayFrame.at<uchar>(y, x - distance) < grayFrame.at<uchar>(y, x + distance)) {
+                    toReturn.at<uchar>(y, x) = 0;
                 }
-                if (flag) {
-                    if (greyScaleImage.at<uchar>(y, x - i) < greyScaleImage.at<uchar>(y, x + i)) {
-                        edgedFrame.at<uchar>(y, x) = 0;
-                    }
-                }
-                if (edgedFrame.at<uchar>(y, x - i) == edgedFrame.at<uchar>(y, x + i))
-                    edgedFrame.at<uchar>(y, x) = 0;
             }
         }
     }
+    return toReturn;
+}
+
+cv::Mat removeHorizontallEdges(const cv::Mat& edgedFrame) {
+    cv::Mat toReturn = edgedFrame;
+    for (int y = 0; y < edgedFrame.rows; y++) {
+        for (int x = 0; x < edgedFrame.cols; x++) {
+            if (edgedFrame.at<uchar>(y, x) > 0) {
+                if (edgedFrame.at<uchar>(y, x - 1) == edgedFrame.at<uchar>(y, x + 1))
+                    toReturn.at<uchar>(y, x) = 0;
+            }
+        }
+    }
+    return toReturn;
+}
+
+cv::Mat filterEdges(cv::Mat& edgedFrame, const cv::Mat& grayFrame) {
+    return removeHorizontallEdges(findLaneInsideEdges(edgedFrame, grayFrame));
+}
+
+void fillTriangleWithZeros(cv::Mat& grayFrame, const cv::Point& point0, const cv::Point& point1, const cv::Point& point2) {
+    cv::Size size = grayFrame.size();
+    cv::Mat mask = cv::Mat::zeros(size, CV_8U);
+    std::vector<cv::Point> points = {point0, point1, point2};
+    cv::fillConvexPoly(mask, points, cv::Scalar(255), 8, 0);
+    grayFrame.setTo(cv::Scalar(0), mask);
 }
 
 cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
     cv::Mat greyFrame = convertFrameToGrayscale(frame);
-
+    // cv::imshow("crop", greyFrame);
     cv::medianBlur(greyFrame, greyFrame, 11);
     cv::Mat resultFrame = greyFrame;
     resultFrame = autoCanny(resultFrame);
     resultFrame = cropRoiFromFrame(resultFrame);
-    filterEdges(resultFrame, greyFrame);
+    resultFrame = filterEdges(resultFrame, greyFrame);
+    fillTriangleWithZeros(resultFrame, cv::Point(0, resultFrame.rows), cv::Point(0, 0), cv::Point(resultFrame.cols / 2 - 75, 0));
+    fillTriangleWithZeros(resultFrame, cv::Point(resultFrame.cols, resultFrame.rows), cv::Point(resultFrame.cols, 0), cv::Point(resultFrame.cols / 2 + 75, 0));
+    // cv::imshow("inside", resultFrame);
     return resultFrame;
 }
 
@@ -88,10 +104,10 @@ void drawDetectedLines(cv::Mat& image, const std::vector<cv::Vec4i>& lines, cv::
 
 std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
     std::vector<cv::Vec4i> detectedLines;
-    cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 180, 90, 1, 150);
-    cv::Mat frame(processedFrame);
-    drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
-    cv::imshow("lines", frame);
+    cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 360, 45, 1, 150);
+    // cv::Mat frame(processedFrame);
+    // drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
+    // cv::imshow("lines", frame);
     return detectedLines;
 }
 
