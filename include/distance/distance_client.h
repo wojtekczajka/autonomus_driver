@@ -4,17 +4,23 @@
 
 #include <string>
 
+#include "common/logger.h"
+#include "easywsclient/easywsclient.hpp"
+
 class DistanceClient {
    public:
-    DistanceClient(const std::string& baseUrl);
+    DistanceClient(Logger& logger, const std::string& serverURL);
     ~DistanceClient();
 
     double getDistance();
+    bool isClosed();
+    void pollAndDispatch();
 
    private:
-    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* output);
+    static void handleMessage(const std::string& message);
 
-    std::string baseUrl;
-    CURL* curl;
-    double distance;
+    Logger& logger;
+    easywsclient::WebSocket::pointer ws;
+    std::string serverURL;
+    static double distance;
 };

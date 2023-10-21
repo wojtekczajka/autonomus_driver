@@ -1,12 +1,15 @@
 #pragma once
 
 #include <curl/curl.h>
+
 #include <string>
+
 #include "common/logger.h"
+#include "easywsclient/easywsclient.hpp"
 
 class SteeringClient {
    public:
-    SteeringClient(Logger& logger);
+    SteeringClient(Logger& logger, const std::string& serverURL);
     ~SteeringClient();
 
     bool start();
@@ -17,20 +20,23 @@ class SteeringClient {
     bool driveForward(int value);
     bool driveBackward(int value);
 
-   private:
-    bool isValidValue(const int& value) const;
-    bool executeCurl(const std::string& action, int value = 0);
+    bool isClosed();
+    void pollAndDispatch();
 
+   private:
+    static void handleMessage(const std::string& message);
+
+    bool isValidValue(const int& value) const;
+    bool excecuteControlRequest(const std::string& action, int value = 0);
     void logInvalidValue(const std::string& action, const int& value) const;
 
+    static std::string return_msg;
+
     Logger& logger;
-    CURL* curl;
-    std::string url;
-    struct curl_slist* headers;
+    easywsclient::WebSocket::pointer ws;
+    std::string serverURL;
     int currentSpeedValue;
     int currentTurnValue;
     std::string previousAction;
     int previousValue;
-
-    static size_t writeCallback(void* contents, size_t size, size_t nmemb, std::string* output);
 };

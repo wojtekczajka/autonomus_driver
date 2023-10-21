@@ -2,36 +2,30 @@
 
 #include "common/config_parser.h"
 
-SteeringClient::SteeringClient(Logger& logger)
-    : logger(logger), curl(curl_easy_init()), headers(nullptr), currentSpeedValue(0), currentTurnValue(0) {
-    if (!curl) {
-        logger.error("Failed to initialize cURL.");
+std::string SteeringClient::return_msg;
+
+SteeringClient::SteeringClient(Logger& logger, const std::string& serverURL)
+    : logger(logger), serverURL(serverURL), currentSpeedValue(0), currentTurnValue(0) {
+    ws = easywsclient::WebSocket::from_url(serverURL);
+    if (!ws) {
+        logger.error("FAILED TO CREATE WEBSOCKET CONNECTION FOR CONTROL");
     }
-    ConfigParser configParser("curl_config.txt");
-    url = configParser.getValue<std::string>("URL", "http://localhost:8000/control/");
-    logger.info(fmt::format("STEERING SERVICE URL: {}", url));
-
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
 }
 
 SteeringClient::~SteeringClient() {
-    if (curl) {
-        curl_slist_free_all(headers);
-        curl_easy_cleanup(curl);
+    if (ws) {
+        ws->close();
+        delete ws;
     }
 }
 
 bool SteeringClient::start() {
-    return executeCurl("start");
+    return excecuteControlRequest("start");
 }
 
 bool SteeringClient::stop() {
     currentSpeedValue = 0;
-    return executeCurl("stop");
+    return excecuteControlRequest("stop");
 }
 
 bool SteeringClient::turnLeft(int value) {
@@ -39,7 +33,7 @@ bool SteeringClient::turnLeft(int value) {
         logInvalidValue("turnLeft", value);
         return false;
     }
-    return executeCurl("turn_left", value);
+    return excecuteControlRequest("turn_left", value);
 }
 
 bool SteeringClient::turnRight(int value) {
@@ -47,12 +41,12 @@ bool SteeringClient::turnRight(int value) {
         logInvalidValue("turnRight", value);
         return false;
     }
-    return executeCurl("turn_right", value);
+    return excecuteControlRequest("turn_right", value);
 }
 
 bool SteeringClient::center() {
     currentTurnValue = 0;
-    return executeCurl("center");
+    return excecuteControlRequest("center");
 }
 
 bool SteeringClient::driveForward(int value) {
@@ -61,7 +55,7 @@ bool SteeringClient::driveForward(int value) {
         return false;
     }
     currentSpeedValue = value;
-    return executeCurl("drive_forward", value);
+    return excecuteControlRequest("drive_forward", value);
 }
 
 bool SteeringClient::driveBackward(int value) {
@@ -70,7 +64,7 @@ bool SteeringClient::driveBackward(int value) {
         return false;
     }
     currentSpeedValue = value;
-    return executeCurl("drive_backward", value);
+    return excecuteControlRequest("drive_backward", value);
 }
 
 bool SteeringClient::isValidValue(const int& value) const {
@@ -81,40 +75,42 @@ void SteeringClient::logInvalidValue(const std::string& action, const int& value
     logger.error("Invalid value for " + action + ": " + std::to_string(value));
 }
 
-bool SteeringClient::executeCurl(const std::string& action, int value) {
+bool SteeringClient::isClosed() {
+    return ws && ws->getReadyState() == easywsclient::WebSocket::CLOSED;
+}
+
+void SteeringClient::pollAndDispatch() {
+    if (ws) {
+        ws->poll();
+        ws->dispatch(handleMessage);
+    }
+}
+
+void SteeringClient::handleMessage(const std::string& message) {
+    SteeringClient::return_msg = message;
+}
+
+bool SteeringClient::excecuteControlRequest(const std::string& action, int value) {
     if (action == previousAction && value == previousValue || action == "center" && previousAction == "center") {
         logger.info("Skipping action");
         return true;
     }
 
-    if (!curl) {
-        logger.error("cURL handle not initialized.");
+    if (isClosed()) {
+        logger.error("CONTROL WEBSOCKET IS CLOSED");
         return false;
     }
 
     previousAction = action;
     previousValue = value;
     std::string postFields = "{\"action\":\"" + action + "\",\"value\":" + std::to_string(value) + "}";
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
-
-    std::string response_data;
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
-
-    CURLcode res = curl_easy_perform(curl);
-
-    if (res == CURLE_OK) {
-        logger.info("HTTP POST REQUEST SUCCESSFUL FOR " + action);
-        logger.info("Response Data: " + response_data);
+    ws->send(postFields);
+    pollAndDispatch();
+    if (SteeringClient::return_msg == "Action performed successfully") {
+        logger.info("WEBSOCKET REQUEST SUCCESSFUL FOR " + action);
         return true;
     } else {
-        logger.error("HTTP POST request failed for " + action + ": " + curl_easy_strerror(res));
+        logger.error("WEBSOCKET REQUEST FAILED FOR " + action + ": " + SteeringClient::return_msg);
         return false;
     }
-}
-
-size_t SteeringClient::writeCallback(void* contents, size_t size, size_t nmemb, std::string* output) {
-    size_t total_size = size * nmemb;
-    std::string* response = output;
-    response->append(static_cast<char*>(contents), total_size);
-    return total_size;
 }

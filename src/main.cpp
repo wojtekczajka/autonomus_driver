@@ -4,10 +4,11 @@
 #include <opencv2/opencv.hpp>
 
 #include "camera/camera.h"
+#include "camera/frame_dispatcher_client.h"
 #include "distance/distance_client.h"
 #include "road_lane_detector/road_lane_detector_canny.h"
-#include "steering/steering_client.h"
 #include "steering/auto_pilot.h"
+#include "steering/steering_client.h"
 
 void drawLine(cv::Mat& image, double vx, double vy, double x0, double y0, cv::Scalar color, int thickness = 2) {
     float x1 = x0 + (0 - y0) * vx / vy;
@@ -57,8 +58,9 @@ int main() {
     cv::VideoWriter videoWriter(outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
     Logger logger("/dev/null");
     Camera camera(logger);
-    DistanceClient distanceClient("http://127.0.0.1:8000");
-    SteeringClient steeringClient(logger);
+    DistanceClient distanceClient(logger, "ws://127.0.0.1:8000/distance");
+    SteeringClient steeringClient(logger, "ws://127.0.0.1:8000/control");
+    FrameDispatcherClient frameDispatcherClient(logger, "ws://localhost:8000/frame_dispatcher");
     RoadLaneDetectorCanny roadLaneDetectorCanny;
     AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient, distanceClient, logger);
     if (!camera.isOpened()) {
@@ -91,7 +93,7 @@ int main() {
         }
 
         // Display current action on the frame
-        
+
         autoPilot.controlSteering();
         std::string actionText = "Action: " + autoPilot.getCurrentAction();
         cv::Mat frame = camera.getCurrentFrame();
@@ -170,6 +172,7 @@ int main() {
 
         // cv::imshow("Camera Frame", frame);
         videoWriter.write(frame);
+        frameDispatcherClient.sendFrame(frame);
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {
             break;
