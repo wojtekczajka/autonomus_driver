@@ -27,12 +27,12 @@ bool ConfigParser::loadConfig() {
 }
 
 void ConfigParser::parseLine(const std::string& line) {
-    std::string cleanedLine = removeSpaces(line);
-    if (!cleanedLine.empty() && cleanedLine[0] != '#') {
-        auto delimiterPos = cleanedLine.find("=");
+    // std::string cleanedLine = removeSpaces(line);
+    if (!line.empty() && line[0] != '#') {
+        auto delimiterPos = line.find("=");
         if (delimiterPos != std::string::npos) {
-            std::string name = cleanedLine.substr(0, delimiterPos);
-            std::string valueStr = cleanedLine.substr(delimiterPos + 1);
+            std::string name = line.substr(0, delimiterPos);
+            std::string valueStr = line.substr(delimiterPos + 1);
             try {
                 int intValue = std::stoi(valueStr);
                 configMap[name] = intValue;

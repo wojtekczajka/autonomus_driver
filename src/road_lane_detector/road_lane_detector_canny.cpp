@@ -2,10 +2,7 @@
 
 #include "common/config_parser.h"
 
-RoadLaneDetectorCanny::RoadLaneDetectorCanny() : xPosition(0),
-                                                 rightVerticalLaneDetected(false),
-                                                 leftVerticalLaneDetected(false),
-                                                 topHorizontalLaneDetected(false) {
+RoadLaneDetectorCanny::RoadLaneDetectorCanny(FrameDispatcherClient& frameDispatcherClient) : frameDispatcherClient(frameDispatcherClient), xPosition(0), rightVerticalLaneDetected(false), leftVerticalLaneDetected(false), topHorizontalLaneDetected(false) {
     ConfigParser configParser("camera_config.txt");
     frameWidth = configParser.getValue<int>("FRAME_WIDTH", 640);
     frameHeight = configParser.getValue<int>("FRAME_HEIGHT", 368);
@@ -34,21 +31,57 @@ cv::Mat autoCanny(const cv::Mat& frame, double sigma = 0.33) {
     return edged;
 }
 
+void fillTriangleWithZeros(cv::Mat& grayFrame, const cv::Point& point0, const cv::Point& point1, const cv::Point& point2) {
+    cv::Size size = grayFrame.size();
+    cv::Mat mask = cv::Mat::zeros(size, CV_8U);
+    std::vector<cv::Point> points = {point0, point1, point2};
+    cv::fillConvexPoly(mask, points, cv::Scalar(255), 8, 0);
+    grayFrame.setTo(cv::Scalar(0), mask);
+}
+
 cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     cv::Mat croppedFrame = frame.clone();
-    croppedFrame.setTo(cv::Scalar(0), topCircleMask);
-    croppedFrame.setTo(cv::Scalar(0), bottomCircleMask);
 
+    cv::Mat mask = cv::Mat::zeros(frame.size(), CV_8U);
+    int halfHeight = croppedFrame.rows * 0.4;
+    mask.rowRange(0, halfHeight).setTo(255);
+    croppedFrame.setTo(0, mask);
+    croppedFrame.setTo(cv::Scalar(0), bottomCircleMask);
+    fillTriangleWithZeros(croppedFrame, cv::Point(0, frame.rows), cv::Point(0, 0), cv::Point(frame.cols / 2, 0));
+    fillTriangleWithZeros(croppedFrame, cv::Point(frame.cols, frame.rows), cv::Point(frame.cols, 0), cv::Point(frame.cols / 2, 0));
     return croppedFrame;
 }
 
+float calculateAverageBrightness(const cv::Mat& grayFrame) {
+    float sum = 0.0;
+    int totalPixels = grayFrame.rows * grayFrame.cols;
+
+    for (int y = 0; y < grayFrame.rows; y++) {
+        for (int x = 0; x < grayFrame.cols; x++) {
+            sum += grayFrame.at<uchar>(y, x);
+        }
+    }
+    return sum / totalPixels;
+} 
+
 cv::Mat findLaneInsideEdges(const cv::Mat& edgedFrame, const cv::Mat& grayFrame) {
     cv::Mat toReturn = edgedFrame;
-    int distance = 5;
+    int distance = 10;
+    float brightness = calculateAverageBrightness(grayFrame);
     for (int y = 0; y < edgedFrame.rows; y++) {
         for (int x = 0; x < edgedFrame.cols; x++) {
-            if (edgedFrame.at<uchar>(y, x) > 0) {
+            if (edgedFrame.at<uchar>(y, x) > 0 && x < edgedFrame.cols / 2) {
                 if (grayFrame.at<uchar>(y, x - distance) < grayFrame.at<uchar>(y, x + distance)) {
+                    // std::cout << brightness << std::endl;
+                    // std::cout << (int) grayFrame.at<uchar>(y, x - distance) << " " << (int) grayFrame.at<uchar>(y, x + distance) << std::endl;
+                    toReturn.at<uchar>(y, x) = 0;
+                } else if (grayFrame.at<uchar>(y, x - distance) > grayFrame.at<uchar>(y, x + distance) && (int) grayFrame.at<uchar>(y, x - distance) - grayFrame.at<uchar>(y, x + distance) < 2 * brightness) {
+                    toReturn.at<uchar>(y, x) = 0;
+                }
+            } else if (edgedFrame.at<uchar>(y, x) > 0 && x > edgedFrame.cols / 2) {
+                if (grayFrame.at<uchar>(y, x + distance) < grayFrame.at<uchar>(y, x - distance)) {
+                    toReturn.at<uchar>(y, x) = 0;
+                } else if (grayFrame.at<uchar>(y, x + distance) > grayFrame.at<uchar>(y, x - distance) && (int) grayFrame.at<uchar>(y, x + distance) - grayFrame.at<uchar>(y, x - distance) < 2 * brightness) {
                     toReturn.at<uchar>(y, x) = 0;
                 }
             }
@@ -70,29 +103,21 @@ cv::Mat removeHorizontallEdges(const cv::Mat& edgedFrame) {
     return toReturn;
 }
 
-cv::Mat filterEdges(cv::Mat& edgedFrame, const cv::Mat& grayFrame) {
-    return removeHorizontallEdges(findLaneInsideEdges(edgedFrame, grayFrame));
-}
-
-void fillTriangleWithZeros(cv::Mat& grayFrame, const cv::Point& point0, const cv::Point& point1, const cv::Point& point2) {
-    cv::Size size = grayFrame.size();
-    cv::Mat mask = cv::Mat::zeros(size, CV_8U);
-    std::vector<cv::Point> points = {point0, point1, point2};
-    cv::fillConvexPoly(mask, points, cv::Scalar(255), 8, 0);
-    grayFrame.setTo(cv::Scalar(0), mask);
+cv::Mat RoadLaneDetectorCanny::filterEdges(cv::Mat& edgedFrame, const cv::Mat& grayFrame) {
+    cv::Mat insideEdges = findLaneInsideEdges(edgedFrame, grayFrame);
+    // frameDispatcherClient.sendFrame(insideEdges, "inside");
+    return insideEdges;
+    // return removeHorizontallEdges(insideEdges);
 }
 
 cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
     cv::Mat greyFrame = convertFrameToGrayscale(frame);
-    // cv::imshow("crop", greyFrame);
+    frameDispatcherClient.sendFrame(cropRoiFromFrame(greyFrame), "cropped frame");
     cv::medianBlur(greyFrame, greyFrame, 11);
     cv::Mat resultFrame = greyFrame;
     resultFrame = autoCanny(resultFrame);
-    resultFrame = cropRoiFromFrame(resultFrame);
     resultFrame = filterEdges(resultFrame, greyFrame);
-    fillTriangleWithZeros(resultFrame, cv::Point(0, resultFrame.rows), cv::Point(0, 0), cv::Point(resultFrame.cols / 2 - 75, 0));
-    fillTriangleWithZeros(resultFrame, cv::Point(resultFrame.cols, resultFrame.rows), cv::Point(resultFrame.cols, 0), cv::Point(resultFrame.cols / 2 + 75, 0));
-    // cv::imshow("inside", resultFrame);
+    resultFrame = cropRoiFromFrame(resultFrame);
     return resultFrame;
 }
 
@@ -102,12 +127,12 @@ void drawDetectedLines(cv::Mat& image, const std::vector<cv::Vec4i>& lines, cv::
     }
 }
 
-std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame) {
+std::vector<cv::Vec4i> RoadLaneDetectorCanny::detectLines(const cv::Mat& processedFrame) {
     std::vector<cv::Vec4i> detectedLines;
-    cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 360, 45, 1, 150);
-    // cv::Mat frame(processedFrame);
-    // drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
-    // cv::imshow("lines", frame);
+    cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 180, 50, 20, 50);
+    cv::Mat frame(processedFrame);
+    drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
+    frameDispatcherClient.sendFrame(frame, "detected lines");
     return detectedLines;
 }
 
@@ -143,13 +168,13 @@ void RoadLaneDetectorCanny::findLanes() {
         cv::fitLine(horizontalPoints, topHorizontalLane, cv::DIST_L2, 0, 0.01, 0.01);
 }
 
-void calculateIntersection(const cv::Vec4i& line, double y, double& x) {
+void calculateIntersection(const cv::Vec4f& line, double& y, double& x) {
     double t = (y - line[3]) / line[1];
     x = line[0] * t + line[2];
 }
 
 double RoadLaneDetectorCanny::calculateDecentering(const int& imageCols, const int& imageHeight) {
-    double center_y = imageHeight * 0.8;
+    double center_y = imageHeight;
     double leftX, rightX;
 
     calculateIntersection(leftVerticalLane, center_y, leftX);
@@ -167,7 +192,7 @@ int RoadLaneDetectorCanny::getXPosition() {
     return xPosition;
 }
 
-std::pair<cv::Vec4i, cv::Vec4i> RoadLaneDetectorCanny::getLanes() {
+std::pair<cv::Vec4f, cv::Vec4f> RoadLaneDetectorCanny::getLanes() {
     return std::make_pair(rightVerticalLane, leftVerticalLane);
 }
 
@@ -183,15 +208,15 @@ void RoadLaneDetectorCanny::processFrame(const cv::Mat frame) {
         xPosition = calculateDecentering(frame.cols, frame.rows);
 }
 
-cv::Vec4i RoadLaneDetectorCanny::getRightVerticalLane() {
+cv::Vec4f RoadLaneDetectorCanny::getRightVerticalLane() {
     return rightVerticalLane;
 }
 
-cv::Vec4i RoadLaneDetectorCanny::getLeftVerticalLane() {
+cv::Vec4f RoadLaneDetectorCanny::getLeftVerticalLane() {
     return leftVerticalLane;
 }
 
-cv::Vec4i RoadLaneDetectorCanny::getTopHorizontalLane() {
+cv::Vec4f RoadLaneDetectorCanny::getTopHorizontalLane() {
     return topHorizontalLane;
 }
 

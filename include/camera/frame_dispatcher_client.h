@@ -10,7 +10,7 @@ class FrameDispatcherClient {
     FrameDispatcherClient(Logger& logger, const std::string& serverURL);
     ~FrameDispatcherClient();
 
-    void sendFrame(const cv::Mat& frame);
+    void sendFrame(const cv::Mat& frame, const std::string& frameName);
     bool isClosed();
     void pollAndDispatch();
 

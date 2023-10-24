@@ -14,6 +14,7 @@ SteeringClient::SteeringClient(Logger& logger, const std::string& serverURL)
 
 SteeringClient::~SteeringClient() {
     if (ws) {
+        std::cout << "steering destructor" << std::endl;
         ws->close();
         delete ws;
     }

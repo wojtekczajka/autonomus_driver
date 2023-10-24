@@ -12,6 +12,6 @@ class Logger {
     void error(const std::string& message);
     void setLogLevel(spdlog::level::level_enum level);
 
-   private:
-    std::shared_ptr<spdlog::logger> logger_;
+//    protected:
+    static std::shared_ptr<spdlog::logger> logger_;
 };

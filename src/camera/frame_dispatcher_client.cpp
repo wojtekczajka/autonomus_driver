@@ -11,15 +11,17 @@ FrameDispatcherClient::FrameDispatcherClient(Logger& logger, const std::string& 
 
 FrameDispatcherClient::~FrameDispatcherClient() {
     if (ws) {
+        std::cout << "frame destructor" << std::endl;
         ws->close();
         delete ws;
     }
 }
 
-void FrameDispatcherClient::sendFrame(const cv::Mat& frame) {
+void FrameDispatcherClient::sendFrame(const cv::Mat& frame, const std::string& frameName) {
     if (isClosed()) {
         logger.error("FRAME DISPATCHER WEBSOCKET IS CLOSED");
     } else {
+        ws->send(frameName);
         std::vector<uchar> buffer;
         cv::imencode(".jpg", frame, buffer);
         std::string image_data(buffer.begin(), buffer.end());

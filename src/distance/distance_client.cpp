@@ -15,6 +15,7 @@ DistanceClient::DistanceClient(Logger& logger, const std::string& serverURL) : s
 
 DistanceClient::~DistanceClient() {
     if (ws) {
+        std::cout << "distance destructor" << std::endl;
         ws->close();
         delete ws;
     }
@@ -41,7 +42,7 @@ double DistanceClient::getDistance() {
         return -1.0;
     }
     std::string response;
-    ws->send("get distance");
+    // ws->send("get distance");
     try {
         pollAndDispatch();
         return DistanceClient::distance;

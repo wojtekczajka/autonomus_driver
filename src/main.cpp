@@ -10,22 +10,16 @@
 #include "steering/auto_pilot.h"
 #include "steering/steering_client.h"
 
-void drawLine(cv::Mat& image, double vx, double vy, double x0, double y0, cv::Scalar color, int thickness = 2) {
-    float x1 = x0 + (0 - y0) * vx / vy;
-    float x2 = x0 + (image.rows - 1 - y0) * vx / vy;
-
-    cv::Point2f startPoint(x1, 0);
-    cv::Point2f endPoint(x2, image.rows - 1);
-    cv::line(image, startPoint, endPoint, color, thickness);
+void drawLineY(cv::Mat& image, const cv::Vec4f& line, const int& y1, const int& y2, cv::Scalar color, int thickness = 2) {
+    float a = line[1] / line[0];
+    float b = line[3] - (a * line[2]);
+    cv::line(image, cv::Point2f((y1 - b) / a, y1), cv::Point2f((y2 - b) / a, y2), color, thickness);
 }
 
-void drawHorizontalLine(cv::Mat& image, double vx, double vy, double x0, double y0, cv::Scalar color, int thickness = 2) {
-    float y1 = y0 + (0 - x0) * vy / vx;
-    float y2 = y0 + (image.cols - 1 - x0) * vy / vx;
-
-    cv::Point2f startPoint(0, y1);
-    cv::Point2f endPoint(image.cols - 1, y2);
-    cv::line(image, startPoint, endPoint, color, thickness);
+void drawLineX(cv::Mat& image, const cv::Vec4f& line, const int& x1, const int& x2, cv::Scalar color, int thickness = 2) {
+    float a = line[1] / line[0];
+    float b = line[3] - (a * line[2]);
+    cv::line(image, cv::Point2f(x1, a * x1 + b), cv::Point2f(x2, a * x2 + b), color, thickness);
 }
 
 volatile bool shouldExit = false;
@@ -55,13 +49,13 @@ int main() {
     signal(SIGINT, signalHandler);
     std::string outputVideoFile = "output_video.avi";
     int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
-    cv::VideoWriter videoWriter(outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
+    cv::VideoWriter videoWriter(outputVideoFile, fourcc, 30, cv::Size(640, 368), true);
     Logger logger("/dev/null");
     Camera camera(logger);
     DistanceClient distanceClient(logger, "ws://127.0.0.1:8000/distance");
     SteeringClient steeringClient(logger, "ws://127.0.0.1:8000/control");
     FrameDispatcherClient frameDispatcherClient(logger, "ws://localhost:8000/frame_dispatcher");
-    RoadLaneDetectorCanny roadLaneDetectorCanny;
+    RoadLaneDetectorCanny roadLaneDetectorCanny(frameDispatcherClient);
     AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient, distanceClient, logger);
     if (!camera.isOpened()) {
         std::cerr << "Error: Couldn't open the camera." << std::endl;
@@ -71,7 +65,7 @@ int main() {
     steeringClient.start();
     // steeringClient.driveForward(40);
     int decenteredPixels;
-    cv::Vec4i rightLane, leftLane, horizontalLane;
+    cv::Vec4f rightLane, leftLane, horizontalLane;
     while (true) {
         if (!camera.readFrame()) {
             std::cerr << "Error: Could not read frame." << std::endl;
@@ -92,15 +86,23 @@ int main() {
             decenteredPixels = roadLaneDetectorCanny.getXPosition();
         }
 
-        // Display current action on the frame
-
         autoPilot.controlSteering();
         std::string actionText = "Action: " + autoPilot.getCurrentAction();
         cv::Mat frame = camera.getCurrentFrame();
-
-        drawLine(frame, rightLane[0], rightLane[1], rightLane[2], rightLane[3], cv::Scalar(255, 255, 255));
-        drawLine(frame, leftLane[0], leftLane[1], leftLane[2], leftLane[3], cv::Scalar(255, 255, 255));
-        drawHorizontalLine(frame, horizontalLane[0], horizontalLane[1], horizontalLane[2], horizontalLane[3], cv::Scalar(255, 255, 255));
+        // frameDispatcherClient.sendFrame(frame, "original frame");
+        drawLineY(frame, rightLane, frame.rows, frame.rows / 2, cv::Scalar(0, 255, 0));
+        drawLineY(frame, leftLane, frame.rows, frame.rows / 2, cv::Scalar(0, 255, 0));
+        float a = rightLane[1] / rightLane[0];
+        float b = rightLane[3] - (a * rightLane[2]);
+        cv::Point p1((frame.rows - b) / a, frame.rows - 5);
+        cv::Point p2(frame.cols, frame.rows - 5);
+        cv::line(frame, p1, p2, cv::Scalar(0, 255, 0), 3);
+        a = leftLane[1] / leftLane[0];
+        b = leftLane[3] - (a * leftLane[2]);
+        p1 = cv::Point((frame.rows - b) / a, frame.rows - 5);
+        p2 = cv::Point(0, frame.rows - 5);
+        cv::line(frame, p1, p2, cv::Scalar(255, 0, 0), 3);
+        // drawHorizontalLine(frame, horizontalLane[0], horizontalLane[1], horizontalLane[2], horizontalLane[3], cv::Scalar(255, 255, 255));
 
         cv::putText(
             frame,                                                                                           // Target image
@@ -172,7 +174,7 @@ int main() {
 
         // cv::imshow("Camera Frame", frame);
         videoWriter.write(frame);
-        frameDispatcherClient.sendFrame(frame);
+        frameDispatcherClient.sendFrame(frame, "result frame");
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {
             break;

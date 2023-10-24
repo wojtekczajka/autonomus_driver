@@ -27,7 +27,7 @@ void Camera::setCameraConfig() {
     int frameWidth = configParser.getValue<int>("FRAME_WIDTH", 640);
     int frameHeihgt = configParser.getValue<int>("FRAME_HEIGHT", 368);
     int propFPS = configParser.getValue<int>("PROP_FPS", 15);
-    double propExsposure = configParser.getValue<double>("PROP_EXPOSURE", 0.75);
+    double propExsposure = configParser.getValue<double>("PROP_EXPOSURE", 0.5);
 
     cap.set(cv::CAP_PROP_FRAME_WIDTH, frameWidth);
     logger.info(fmt::format("VIDEO CAPTURE FRAME WIDTH SET TO: {}", frameWidth));
