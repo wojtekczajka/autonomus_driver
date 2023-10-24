@@ -3,7 +3,7 @@
 #include "camera/camera.h"
 
 int main() {
-    int num = 0;
+    int num = 26;
     Logger logger("/dev/null");
     Camera camera(logger);
 
@@ -33,7 +33,7 @@ int main() {
             cv::imwrite(frameFilename, frame);  
 
             std::ofstream descriptionFile("frame" + std::to_string(num) + "_description.txt");
-            std::string description("ACTION=center");
+            std::string description("ACTION=making turn left");
             descriptionFile << description << std::endl;
             descriptionFile.close();
             std::cout << num << std::endl;

@@ -1,1 +1,1 @@
-ACTION=correction centering
+ACTION=center
