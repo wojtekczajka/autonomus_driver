@@ -366,3 +366,119 @@ TEST_F(AutoPilotTest, ShouldMakeCorrectionRight20) {
 TEST_F(AutoPilotTest, ShouldMakeCorrectionRight21) {
     runAutoPilotTest("../frames/frame78.jpg", "../frames/frame78_description.txt");
 }
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft0) {
+    runAutoPilotTest("../frames/frame79.jpg", "../frames/frame79_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft1) {
+    runAutoPilotTest("../frames/frame80.jpg", "../frames/frame80_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft2) {
+    runAutoPilotTest("../frames/frame81.jpg", "../frames/frame81_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft3) {
+    runAutoPilotTest("../frames/frame82.jpg", "../frames/frame82_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft4) {
+    runAutoPilotTest("../frames/frame83.jpg", "../frames/frame83_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft5) {
+    runAutoPilotTest("../frames/frame84.jpg", "../frames/frame84_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft6) {
+    runAutoPilotTest("../frames/frame85.jpg", "../frames/frame85_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft7) {
+    runAutoPilotTest("../frames/frame86.jpg", "../frames/frame86_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft8) {
+    runAutoPilotTest("../frames/frame87.jpg", "../frames/frame87_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft9) {
+    runAutoPilotTest("../frames/frame88.jpg", "../frames/frame88_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft10) {
+    runAutoPilotTest("../frames/frame89.jpg", "../frames/frame89_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft11) {
+    runAutoPilotTest("../frames/frame90.jpg", "../frames/frame90_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft12) {
+    runAutoPilotTest("../frames/frame91.jpg", "../frames/frame91_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft13) {
+    runAutoPilotTest("../frames/frame92.jpg", "../frames/frame92_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft14) {
+    runAutoPilotTest("../frames/frame93.jpg", "../frames/frame93_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft15) {
+    runAutoPilotTest("../frames/frame94.jpg", "../frames/frame94_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft16) {
+    runAutoPilotTest("../frames/frame95.jpg", "../frames/frame95_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft17) {
+    runAutoPilotTest("../frames/frame96.jpg", "../frames/frame96_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft18) {
+    runAutoPilotTest("../frames/frame97.jpg", "../frames/frame97_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft19) {
+    runAutoPilotTest("../frames/frame98.jpg", "../frames/frame98_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft20) {
+    runAutoPilotTest("../frames/frame99.jpg", "../frames/frame99_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft21) {
+    runAutoPilotTest("../frames/frame100.jpg", "../frames/frame100_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft22) {
+    runAutoPilotTest("../frames/frame101.jpg", "../frames/frame101_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft23) {
+    runAutoPilotTest("../frames/frame102.jpg", "../frames/frame102_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft24) {
+    runAutoPilotTest("../frames/frame103.jpg", "../frames/frame103_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft25) {
+    runAutoPilotTest("../frames/frame104.jpg", "../frames/frame104_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft26) {
+    runAutoPilotTest("../frames/frame105.jpg", "../frames/frame105_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft27) {
+    runAutoPilotTest("../frames/frame106.jpg", "../frames/frame106_description.txt");
+}
+
+TEST_F(AutoPilotTest, ShouldMakeCorrectionLeft28) {
+    runAutoPilotTest("../frames/frame107.jpg", "../frames/frame107_description.txt");
+}

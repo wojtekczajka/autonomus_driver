@@ -58,8 +58,9 @@ enable_testing()
 
 add_executable(
     auto_pilot_test
-    src/steering/auto_pilot.cpp
+    tests/road_lane_detector_canny_test.cpp
     tests/auto_pilot_test.cpp
+    src/steering/auto_pilot.cpp
     src/common/config_parser.cpp
     src/common/logger.cpp
     src/camera/frame_dispatcher_client.cpp
