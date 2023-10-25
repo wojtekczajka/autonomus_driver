@@ -15,15 +15,15 @@ void AutoPilot::controlSteering() {
     std::cout << "here2" << std::endl;
     int decenteredPixels = roadLaneDetector.getXPosition();
     if (roadLaneDetector.isRightVerticalLaneDetected() && roadLaneDetector.isLeftVerticalLaneDetected()) {
-        if (std::abs(decenteredPixels) <= 5) {
+        if (std::abs(decenteredPixels) <= 10) {
             currentAction = "correction centering";
-            // steeringClient.center();
+            steeringClient.center();
         } else if (decenteredPixels > 0) {
             currentAction = "correction right";
-            // steeringClient.turnRight(35);
+            steeringClient.turnRight(35);
         } else {
             currentAction = "correction left";
-            // steeringClient.turnLeft(35);
+            steeringClient.turnLeft(35);
         }
         // steeringClient.driveForward(30);
     } else if (roadLaneDetector.isRightVerticalLaneDetected()) {
