@@ -112,7 +112,7 @@ cv::Mat RoadLaneDetectorCanny::filterEdges(cv::Mat& edgedFrame, const cv::Mat& g
 
 cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
     cv::Mat greyFrame = convertFrameToGrayscale(frame);
-    frameDispatcherClient.sendFrame(cropRoiFromFrame(greyFrame), "cropped frame");
+    // frameDispatcherClient.sendFrame(cropRoiFromFrame(greyFrame), "cropped frame");
     cv::medianBlur(greyFrame, greyFrame, 11);
     cv::Mat resultFrame = greyFrame;
     resultFrame = autoCanny(resultFrame);
@@ -132,7 +132,7 @@ std::vector<cv::Vec4i> RoadLaneDetectorCanny::detectLines(const cv::Mat& process
     cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 180, 50, 20, 50);
     cv::Mat frame(processedFrame);
     drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
-    frameDispatcherClient.sendFrame(frame, "detected lines");
+    // frameDispatcherClient.sendFrame(frame, "detected lines");
     return detectedLines;
 }
 

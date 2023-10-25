@@ -1,7 +1,9 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 project(autonomus_driver)
 
+
 set(CMAKE_CXX_STANDARD 17)
+message("C++ Standard: ${CMAKE_CXX_STANDARD}")
 
 find_package(OpenCV REQUIRED)
 find_package(spdlog REQUIRED)

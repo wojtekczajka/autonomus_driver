@@ -1,1 +1,4 @@
 ACTION=correction centering
+LEFT_LANE_DETECTED=1
+RIGHT_LANE_DETECTED=1
+
