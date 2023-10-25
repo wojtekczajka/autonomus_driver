@@ -2,7 +2,7 @@
 
 #include "common/config_parser.h"
 
-RoadLaneDetectorCanny::RoadLaneDetectorCanny(FrameDispatcherClient& frameDispatcherClient) : frameDispatcherClient(frameDispatcherClient), xPosition(0), rightVerticalLaneDetected(false), leftVerticalLaneDetected(false), topHorizontalLaneDetected(false) {
+RoadLaneDetectorCanny::RoadLaneDetectorCanny(IFrameDispatcherClient& frameDispatcherClient) : frameDispatcherClient(frameDispatcherClient), xPosition(0), rightVerticalLaneDetected(false), leftVerticalLaneDetected(false), topHorizontalLaneDetected(false) {
     ConfigParser configParser("camera_config.txt");
     frameWidth = configParser.getValue<int>("FRAME_WIDTH", 640);
     frameHeight = configParser.getValue<int>("FRAME_HEIGHT", 368);

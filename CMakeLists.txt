@@ -71,6 +71,7 @@ add_executable(
 target_link_libraries(
     auto_pilot_test
     GTest::gtest_main
+    GTest::gmock_main
     ${OpenCV_LIBS}
 )
 

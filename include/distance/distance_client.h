@@ -6,13 +6,14 @@
 
 #include "common/logger.h"
 #include "easywsclient/easywsclient.hpp"
+#include "distance/distance_client_interface.h"
 
-class DistanceClient {
+class DistanceClient : public IDistanceClient {
    public:
     DistanceClient(Logger& logger, const std::string& serverURL);
     ~DistanceClient();
 
-    double getDistance();
+    double getDistance() override;
     bool isClosed();
     void pollAndDispatch();
 

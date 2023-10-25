@@ -7,7 +7,7 @@
 
 class AutoPilot {
    public:
-    AutoPilot(RoadLaneDetectorCanny& detector, SteeringClient& steeringClient, DistanceClient& distanceClient, Logger& logger);
+    AutoPilot(RoadLaneDetectorCanny& detector, ISteeringClient& steeringClient, IDistanceClient& distanceClient, Logger& logger);
     void controlSteering();
     std::string getCurrentAction();
 
@@ -15,8 +15,8 @@ class AutoPilot {
     bool isColissionDetected();
 
     RoadLaneDetectorCanny& roadLaneDetector;
-    SteeringClient& steeringClient;
-    DistanceClient& distanceClient;
+    ISteeringClient& steeringClient;
+    IDistanceClient& distanceClient;
     Logger& logger;
     std::string currentAction;
 };

@@ -6,19 +6,20 @@
 
 #include "common/logger.h"
 #include "easywsclient/easywsclient.hpp"
+#include "steering/steering_client_interface.h"
 
-class SteeringClient {
+class SteeringClient : public ISteeringClient {
    public:
     SteeringClient(Logger& logger, const std::string& serverURL);
     ~SteeringClient();
 
-    bool start();
-    bool stop();
-    bool center();
-    bool turnLeft(int value);
-    bool turnRight(int value);
-    bool driveForward(int value);
-    bool driveBackward(int value);
+    bool start() override;
+    bool stop() override;
+    bool center() override;
+    bool turnLeft(int value) override;
+    bool turnRight(int value) override;
+    bool driveForward(int value) override;
+    bool driveBackward(int value) override;
 
     bool isClosed();
     void pollAndDispatch();
