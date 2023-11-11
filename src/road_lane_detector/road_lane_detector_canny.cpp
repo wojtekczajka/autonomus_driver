@@ -47,8 +47,8 @@ cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     mask.rowRange(0, halfHeight).setTo(255);
     croppedFrame.setTo(0, mask);
     croppedFrame.setTo(cv::Scalar(0), bottomCircleMask);
-    fillTriangleWithZeros(croppedFrame, cv::Point(0, frame.rows), cv::Point(0, 0), cv::Point(frame.cols / 2, 0));
-    fillTriangleWithZeros(croppedFrame, cv::Point(frame.cols, frame.rows), cv::Point(frame.cols, 0), cv::Point(frame.cols / 2, 0));
+    fillTriangleWithZeros(croppedFrame, cv::Point(0, frame.rows * 0.8), cv::Point(0, 0), cv::Point(frame.cols / 2, 0));
+    fillTriangleWithZeros(croppedFrame, cv::Point(frame.cols, frame.rows * 0.8), cv::Point(frame.cols, 0), cv::Point(frame.cols / 2, 0));
     return croppedFrame;
 }
 
@@ -174,7 +174,7 @@ void calculateIntersection(const cv::Vec4f& line, double& y, double& x) {
 }
 
 double RoadLaneDetectorCanny::calculateDecentering(const int& imageCols, const int& imageHeight) {
-    double center_y = imageHeight;
+    double center_y = imageHeight * 1.0;
     double leftX, rightX;
 
     calculateIntersection(leftVerticalLane, center_y, leftX);

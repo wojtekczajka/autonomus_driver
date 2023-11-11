@@ -39,7 +39,7 @@ target_link_libraries(photographer ${OpenCV_LIBS})
 
 target_link_libraries(hsvTest ${OpenCV_LIBS})
 
-target_link_libraries(autonomus_driver ${OpenCV_LIBS})
+target_link_libraries(autonomus_driver ${OpenCV_LIBS} cpr::cpr)
 
 target_include_directories(autonomus_driver PRIVATE
     include     
@@ -55,6 +55,9 @@ FetchContent_Declare(
   URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
 FetchContent_MakeAvailable(googletest)
+FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+                         GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8) # The commit hash for 1.10.x. Replace with the latest from: https://github.com/libcpr/cpr/releases
+FetchContent_MakeAvailable(cpr)
 
 enable_testing()
 
@@ -75,6 +78,7 @@ target_link_libraries(
     auto_pilot_test
     GTest::gtest_main
     GTest::gmock_main
+    cpr::cpr
     ${OpenCV_LIBS}
 )
 

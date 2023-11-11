@@ -1,16 +1,18 @@
 #include "distance/distance_client.h"
+#include <nlohmann/json.hpp>
 
 #include <curl/curl.h>
 
 #include <iostream>
+#include <cpr/cpr.h> 
 
 double DistanceClient::distance = 0.0;
 
 DistanceClient::DistanceClient(Logger& logger, const std::string& serverURL) : serverURL(serverURL), logger(logger) {
-    ws = easywsclient::WebSocket::from_url("ws://localhost:8000/distance");
-    if (!ws) {
-        logger.error("FAILED TO CREATE WEBSOCKET CONNECTION FOR DISTANCE");
-    }
+    // ws = easywsclient::WebSocket::from_url("ws://localhost:8000/distance");
+    // if (!ws) {
+    //     logger.error("FAILED TO CREATE WEBSOCKET CONNECTION FOR DISTANCE");
+    // }
 }
 
 DistanceClient::~DistanceClient() {
@@ -37,17 +39,7 @@ void DistanceClient::handleMessage(const std::string& message) {
 }
 
 double DistanceClient::getDistance() {
-    if (isClosed()) {
-        logger.error("DISTANCE WEBSOCKET IS CLOSED");
-        return -1.0;
-    }
-    std::string response;
-    // ws->send("get distance");
-    try {
-        pollAndDispatch();
-        return DistanceClient::distance;
-    } catch (const std::exception& e) {
-        logger.error("ERROR OCCURED GETTING DISTANCE");
-        return -1.0;
-    }
+    cpr::Response r = cpr::Get(cpr::Url{"http://127.0.0.1:8000/distance"});
+    nlohmann::json json_response = nlohmann::json::parse(r.text);
+    return json_response["distance"];
 }

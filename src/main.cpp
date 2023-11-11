@@ -72,12 +72,15 @@ int main() {
             break;
         }
 
+        cv::Mat frame = camera.getCurrentFrame();
         roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
         if (roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
             rightLane = roadLaneDetectorCanny.getRightVerticalLane();
+            drawLineY(frame, rightLane, frame.rows, frame.rows / 2, cv::Scalar(0, 255, 0));
         }
         if (roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
             leftLane = roadLaneDetectorCanny.getLeftVerticalLane();
+            drawLineY(frame, leftLane, frame.rows, frame.rows / 2, cv::Scalar(0, 255, 0));
         }
         if (roadLaneDetectorCanny.isTopHorizontalLaneDetected()) {
             horizontalLane = roadLaneDetectorCanny.getTopHorizontalLane();
@@ -88,21 +91,44 @@ int main() {
 
         autoPilot.controlSteering();
         std::string actionText = "Action: " + autoPilot.getCurrentAction();
-        cv::Mat frame = camera.getCurrentFrame();
         // frameDispatcherClient.sendFrame(frame, "original frame");
-        drawLineY(frame, rightLane, frame.rows, frame.rows / 2, cv::Scalar(0, 255, 0));
-        drawLineY(frame, leftLane, frame.rows, frame.rows / 2, cv::Scalar(0, 255, 0));
+        
+        
         float a = rightLane[1] / rightLane[0];
         float b = rightLane[3] - (a * rightLane[2]);
         cv::Point p1((frame.rows - b) / a, frame.rows - 5);
         cv::Point p2(frame.cols, frame.rows - 5);
+        float distance1 = frame.cols - ((frame.rows - b) / a);
         cv::line(frame, p1, p2, cv::Scalar(0, 255, 0), 3);
         a = leftLane[1] / leftLane[0];
         b = leftLane[3] - (a * leftLane[2]);
         p1 = cv::Point((frame.rows - b) / a, frame.rows - 5);
         p2 = cv::Point(0, frame.rows - 5);
+        float distance2 = ((frame.rows - b) / a);
         cv::line(frame, p1, p2, cv::Scalar(255, 0, 0), 3);
         // drawHorizontalLine(frame, horizontalLane[0], horizontalLane[1], horizontalLane[2], horizontalLane[3], cv::Scalar(255, 255, 255));
+
+        cv::putText(
+            frame,                                                                                           // Target image
+            "right distance: " + std::to_string(distance1),  // Text to be added
+            cv::Point(10, 240),                                                                              // Position
+            cv::FONT_HERSHEY_SIMPLEX,                                                                        // Font type
+            1.0,                                                                                             // Font scale
+            cv::Scalar(255, 255, 255),                                                                       // Text color (white)
+            2,                                                                                               // Text thickness
+            cv::LINE_AA                                                                                      // Line type
+        );
+        
+        cv::putText(
+            frame,                                                                                           // Target image
+            "left distance: " + std::to_string(distance2),  // Text to be added
+            cv::Point(10, 210),                                                                              // Position
+            cv::FONT_HERSHEY_SIMPLEX,                                                                        // Font type
+            1.0,                                                                                             // Font scale
+            cv::Scalar(255, 255, 255),                                                                       // Text color (white)
+            2,                                                                                               // Text thickness
+            cv::LINE_AA                                                                                      // Line type
+        );
 
         cv::putText(
             frame,                                                                                           // Target image
@@ -172,9 +198,10 @@ int main() {
             cv::LINE_AA                 // Line type
         );
 
-        // cv::imshow("Camera Frame", frame);
-        videoWriter.write(frame);
-        frameDispatcherClient.sendFrame(frame, "result frame");
+        cv::imshow("Result Frame", frame);
+        cv::waitKey(1);
+        // videoWriter.write(frame);
+        // frameDispatcherClient.sendFrame(frame, "result frame");
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {
             break;
