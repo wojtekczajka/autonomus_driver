@@ -8,10 +8,6 @@ std::string SteeringClient::return_msg;
 
 SteeringClient::SteeringClient(Logger& logger, const std::string& serverURL)
     : logger(logger), serverURL(serverURL), currentSpeedValue(0), currentTurnValue(0) {
-    // ws = easywsclient::WebSocket::from_url(serverURL);
-    // if (!ws) {
-    //     logger.error("FAILED TO CREATE WEBSOCKET CONNECTION FOR CONTROL");
-    // }
 }
 
 SteeringClient::~SteeringClient() {
@@ -99,25 +95,10 @@ bool SteeringClient::excecuteControlRequest(const std::string& action, int value
         return true;
     }
 
-    // if (isClosed()) {
-    //     logger.error("CONTROL WEBSOCKET IS CLOSED");
-    //     return false;
-    // }
-
     previousAction = action;
     previousValue = value;
     cpr::Response r = cpr::Post(cpr::Url{"http://127.0.0.1:8000/control"},
                                 cpr::Body{"{\"action\":\"" + action + "\",\"value\":" + std::to_string(value) + "}"},
                                 cpr::Header{{"Content-Type", "application/json"}});
     return true;
-    // std::string postFields = "{\"action\":\"" + action + "\",\"value\":" + std::to_string(value) + "}";
-    // ws->send(postFields);
-    // pollAndDispatch();
-    // if (SteeringClient::return_msg == "Action performed successfully") {
-    //     logger.info("WEBSOCKET REQUEST SUCCESSFUL FOR " + action);
-    //     return true;
-    // } else {
-    //     logger.error("WEBSOCKET REQUEST FAILED FOR " + action + ": " + SteeringClient::return_msg);
-    //     return false;
-    // }
 }
