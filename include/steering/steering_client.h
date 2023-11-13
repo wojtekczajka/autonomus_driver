@@ -8,6 +8,8 @@
 #include "easywsclient/easywsclient.hpp"
 #include "steering/steering_client_interface.h"
 
+#include <cpr/cpr.h>
+
 class SteeringClient : public ISteeringClient {
    public:
     SteeringClient(Logger& logger, const std::string& serverURL);
@@ -21,21 +23,14 @@ class SteeringClient : public ISteeringClient {
     bool driveForward(int value) override;
     bool driveBackward(int value) override;
 
-    bool isClosed();
-    void pollAndDispatch();
-
    private:
-    static void handleMessage(const std::string& message);
-
     bool isValidValue(const int& value) const;
     bool excecuteControlRequest(const std::string& action, int value = 0);
     void logInvalidValue(const std::string& action, const int& value) const;
 
-    static std::string return_msg;
-
     Logger& logger;
     easywsclient::WebSocket::pointer ws;
-    std::string serverURL;
+    cpr::Url serverURL;
     int currentSpeedValue;
     int currentTurnValue;
     std::string previousAction;

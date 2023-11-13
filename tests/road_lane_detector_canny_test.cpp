@@ -5,17 +5,11 @@
 
 #include "common/config_parser.h"
 
-class MockFrameDispatcherClient : public IFrameDispatcherClient {
-   public:
-    MOCK_METHOD(void, sendFrame, (const cv::Mat&, const std::string&), (override));
-};
-
 class RoadLaneDetectorCannyParameterizedTestFixture : public ::testing::TestWithParam<std::tuple<std::string, std::string>> {
    protected:
-    MockFrameDispatcherClient mockFrameDispatcherClient;
     RoadLaneDetectorCanny roadLaneDetectorCanny;
 
-    RoadLaneDetectorCannyParameterizedTestFixture() : roadLaneDetectorCanny(mockFrameDispatcherClient) {}
+    RoadLaneDetectorCannyParameterizedTestFixture() : roadLaneDetectorCanny() {}
 };
 
 TEST_P(RoadLaneDetectorCannyParameterizedTestFixture, testAllDetectedLines) {

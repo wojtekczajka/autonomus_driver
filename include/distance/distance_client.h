@@ -1,6 +1,6 @@
 #pragma once
 
-#include <curl/curl.h>
+#include <cpr/cpr.h> 
 
 #include <string>
 
@@ -22,6 +22,6 @@ class DistanceClient : public IDistanceClient {
 
     Logger& logger;
     easywsclient::WebSocket::pointer ws;
-    std::string serverURL;
+    cpr::Url serverURL;
     static double distance;
 };

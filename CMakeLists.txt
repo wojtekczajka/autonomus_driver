@@ -16,7 +16,6 @@ add_executable(autonomus_driver
     src/common/logger.cpp
     src/common/config_parser.cpp
     src/camera/camera.cpp
-    src/camera/frame_dispatcher_client.cpp
     src/distance/distance_client.cpp
     src/steering/steering_client.cpp
     src/steering/auto_pilot.cpp
@@ -68,7 +67,6 @@ add_executable(
     src/steering/auto_pilot.cpp
     src/common/config_parser.cpp
     src/common/logger.cpp
-    src/camera/frame_dispatcher_client.cpp
     src/distance/distance_client.cpp
     src/steering/steering_client.cpp
     src/easywsclient/easywsclient.cpp

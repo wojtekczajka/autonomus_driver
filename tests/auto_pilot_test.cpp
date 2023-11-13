@@ -23,25 +23,18 @@ class MockSteeringClient : public ISteeringClient {
     MOCK_METHOD(bool, driveBackward, (int), (override));
 };
 
-class MockFrameDispatcherClient : public IFrameDispatcherClient {
-   public:
-    MOCK_METHOD(void, sendFrame, (const cv::Mat&, const std::string&), (override));
-};
-
 class AutoPilotParameterizedTestFixture : public ::testing::TestWithParam<std::tuple<std::string, std::string>> {
    protected:
     Logger logger;
     MockDistanceClient mockDistanceClient;
     MockSteeringClient mockSteeringClient;
-    MockFrameDispatcherClient mockFrameDispatcherClient;
     RoadLaneDetectorCanny roadLaneDetectorCanny;
     AutoPilot autoPilot;
 
     AutoPilotParameterizedTestFixture() : logger("/dev/null"),
                                           mockDistanceClient(),
                                           mockSteeringClient(),
-                                          mockFrameDispatcherClient(),
-                                          roadLaneDetectorCanny(mockFrameDispatcherClient),
+                                          roadLaneDetectorCanny(),
                                           autoPilot(roadLaneDetectorCanny, mockSteeringClient, mockDistanceClient, logger) {}
 
     void SetUp() override {
@@ -53,7 +46,6 @@ class AutoPilotParameterizedTestFixture : public ::testing::TestWithParam<std::t
         ON_CALL(mockSteeringClient, turnRight(::testing::_)).WillByDefault(::testing::Return(true));
         ON_CALL(mockSteeringClient, driveForward(::testing::_)).WillByDefault(::testing::Return(true));
         ON_CALL(mockSteeringClient, driveBackward(::testing::_)).WillByDefault(::testing::Return(true));
-        ON_CALL(mockFrameDispatcherClient, sendFrame(::testing::_, ::testing::_)).WillByDefault(::testing::Return());
     }
 
     void TearDown() override {

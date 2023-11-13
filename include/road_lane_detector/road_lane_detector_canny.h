@@ -2,12 +2,11 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "camera/frame_dispatcher_client.h"
 #include "common/logger.h"
 
 class RoadLaneDetectorCanny {
    public:
-    RoadLaneDetectorCanny(IFrameDispatcherClient& frameDispatcherClient);
+    RoadLaneDetectorCanny();
     void processFrame(const cv::Mat frame);
     bool isRightVerticalLaneDetected();
     bool isLeftVerticalLaneDetected();
@@ -27,7 +26,6 @@ class RoadLaneDetectorCanny {
     cv::Mat cropRoiFromFrame(const cv::Mat& frame);
     void classifyPoints(const std::vector<cv::Vec4i>& lines);
 
-    IFrameDispatcherClient& frameDispatcherClient;
     bool leftVerticalLaneDetected, rightVerticalLaneDetected, topHorizontalLaneDetected;
     int xPosition, frameWidth, frameHeight;
     std::vector<cv::Point> rightPoints, leftPoints, horizontalPoints;

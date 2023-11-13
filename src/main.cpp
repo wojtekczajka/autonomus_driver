@@ -4,7 +4,6 @@
 #include <opencv2/opencv.hpp>
 
 #include "camera/camera.h"
-#include "camera/frame_dispatcher_client.h"
 #include "distance/distance_client.h"
 #include "road_lane_detector/road_lane_detector_canny.h"
 #include "steering/auto_pilot.h"
@@ -45,17 +44,17 @@ std::pair<cv::Point2f, cv::Point2f> vectorToLinePointss(const cv::Vec4f& vector,
     return std::make_pair(startPoint, endPoint);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     signal(SIGINT, signalHandler);
-    std::string outputVideoFile = "output_video.avi";
+    std::string outputVideoFile = argv[1];
     int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
-    cv::VideoWriter videoWriter(outputVideoFile, fourcc, 30, cv::Size(640, 368), true);
+    cv::VideoWriter videoWriterRaw("raw_" + outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
+    cv::VideoWriter videoWriterResult("result_" + outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
     Logger logger("/dev/null");
     Camera camera(logger);
-    DistanceClient distanceClient(logger, "ws://127.0.0.1:8000/distance");
-    SteeringClient steeringClient(logger, "ws://127.0.0.1:8000/control");
-    FrameDispatcherClient frameDispatcherClient(logger, "ws://localhost:8000/frame_dispatcher");
-    RoadLaneDetectorCanny roadLaneDetectorCanny(frameDispatcherClient);
+    DistanceClient distanceClient(logger, "http://127.0.0.1:8000/distance");
+    SteeringClient steeringClient(logger, "http://127.0.0.1:8000/control");
+    RoadLaneDetectorCanny roadLaneDetectorCanny;
     AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient, distanceClient, logger);
     if (!camera.isOpened()) {
         std::cerr << "Error: Couldn't open the camera." << std::endl;
@@ -63,7 +62,6 @@ int main() {
     }
     int frameCount = 0;  // Initialize frame count
     steeringClient.start();
-    // steeringClient.driveForward(40);
     int decenteredPixels;
     cv::Vec4f rightLane, leftLane, horizontalLane;
     while (true) {
@@ -73,6 +71,7 @@ int main() {
         }
 
         cv::Mat frame = camera.getCurrentFrame();
+        videoWriterRaw.write(frame);
         roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
         if (roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
             rightLane = roadLaneDetectorCanny.getRightVerticalLane();
@@ -198,7 +197,8 @@ int main() {
             cv::LINE_AA                 // Line type
         );
 
-        cv::imshow("Result Frame", frame);
+        // cv::imshow("Result Frame", frame);
+        videoWriterResult.write(frame);
         cv::waitKey(1);
         // videoWriter.write(frame);
         // frameDispatcherClient.sendFrame(frame, "result frame");
@@ -212,7 +212,8 @@ int main() {
     // Release the camera capture object
     steeringClient.stop();
     cv::destroyAllWindows();
-    videoWriter.release();
+    videoWriterRaw.release();
+    videoWriterResult.release();
 
     return 0;
 }
