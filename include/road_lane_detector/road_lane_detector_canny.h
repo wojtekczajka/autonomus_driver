@@ -12,6 +12,8 @@ class RoadLaneDetectorCanny {
     bool isLeftVerticalLaneDetected();
     bool isTopHorizontalLaneDetected();
     int getXPosition();
+    int getLeftDistance();
+    int getRightDistance();
     std::pair<cv::Vec4f, cv::Vec4f> getLanes();
     cv::Vec4f getRightVerticalLane();
     cv::Vec4f getLeftVerticalLane();

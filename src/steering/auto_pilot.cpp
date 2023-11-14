@@ -27,6 +27,15 @@ void AutoPilot::controlSteering() {
         steeringClient.turnLeft(100);
         steeringClient.driveForward(28);
         currentAction = "making turn left";
+    } else if (roadLaneDetector.isLeftVerticalLaneDetected()) {
+        int distance = roadLaneDetector.getLeftDistance();
+        if (distance > 75 ) 
+            steeringClient.turnLeft(25);
+        else if (distance < 65) 
+           steeringClient.turnRight(25); 
+        else 
+            steeringClient.center();
+        currentAction = "skipping turn right";
     }
 }
 

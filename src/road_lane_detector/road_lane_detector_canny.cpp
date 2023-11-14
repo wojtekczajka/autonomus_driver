@@ -62,7 +62,7 @@ float calculateAverageBrightness(const cv::Mat& grayFrame) {
         }
     }
     return sum / totalPixels;
-} 
+}
 
 cv::Mat findLaneInsideEdges(const cv::Mat& edgedFrame, const cv::Mat& grayFrame) {
     cv::Mat toReturn = edgedFrame;
@@ -75,13 +75,13 @@ cv::Mat findLaneInsideEdges(const cv::Mat& edgedFrame, const cv::Mat& grayFrame)
                     // std::cout << brightness << std::endl;
                     // std::cout << (int) grayFrame.at<uchar>(y, x - distance) << " " << (int) grayFrame.at<uchar>(y, x + distance) << std::endl;
                     toReturn.at<uchar>(y, x) = 0;
-                } else if (grayFrame.at<uchar>(y, x - distance) > grayFrame.at<uchar>(y, x + distance) && (int) grayFrame.at<uchar>(y, x - distance) - grayFrame.at<uchar>(y, x + distance) < 2 * brightness) {
+                } else if (grayFrame.at<uchar>(y, x - distance) > grayFrame.at<uchar>(y, x + distance) && (int)grayFrame.at<uchar>(y, x - distance) - grayFrame.at<uchar>(y, x + distance) < 2 * brightness) {
                     toReturn.at<uchar>(y, x) = 0;
                 }
             } else if (edgedFrame.at<uchar>(y, x) > 0 && x > edgedFrame.cols / 2) {
                 if (grayFrame.at<uchar>(y, x + distance) < grayFrame.at<uchar>(y, x - distance)) {
                     toReturn.at<uchar>(y, x) = 0;
-                } else if (grayFrame.at<uchar>(y, x + distance) > grayFrame.at<uchar>(y, x - distance) && (int) grayFrame.at<uchar>(y, x + distance) - grayFrame.at<uchar>(y, x - distance) < 2 * brightness) {
+                } else if (grayFrame.at<uchar>(y, x + distance) > grayFrame.at<uchar>(y, x - distance) && (int)grayFrame.at<uchar>(y, x + distance) - grayFrame.at<uchar>(y, x - distance) < 2 * brightness) {
                     toReturn.at<uchar>(y, x) = 0;
                 }
             }
@@ -206,6 +206,18 @@ void RoadLaneDetectorCanny::processFrame(const cv::Mat frame) {
     findLanes();
     if (rightVerticalLaneDetected && leftVerticalLaneDetected)
         xPosition = calculateDecentering(frame.cols, frame.rows);
+}
+
+int RoadLaneDetectorCanny::getLeftDistance() {
+    int a = leftVerticalLane[1] / leftVerticalLane[0];
+    int b = leftVerticalLane[3] - (a * leftVerticalLane[2]);
+    return ((frameHeight - b) / a);
+}
+
+int RoadLaneDetectorCanny::getRightDistance() {
+    float a = rightVerticalLane[1] / rightVerticalLane[0];
+    float b = rightVerticalLane[3] - (a * rightVerticalLane[2]);
+    return frameWidth - ((frameHeight - b) / a);
 }
 
 cv::Vec4f RoadLaneDetectorCanny::getRightVerticalLane() {
