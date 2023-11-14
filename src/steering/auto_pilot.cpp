@@ -17,22 +17,22 @@ void AutoPilot::controlSteering() {
             steeringClient.center();
         } else if (decenteredPixels > 0) {
             currentAction = "correction right";
-            steeringClient.turnRight(27);
+            steeringClient.turnRight(40);
         } else {
             currentAction = "correction left";
-            steeringClient.turnLeft(27);
+            steeringClient.turnLeft(40);
         }
         steeringClient.driveForward(24);
     } else if (roadLaneDetector.isRightVerticalLaneDetected()) {
         steeringClient.turnLeft(100);
-        steeringClient.driveForward(28);
+        steeringClient.driveForward(20);
         currentAction = "making turn left";
     } else if (roadLaneDetector.isLeftVerticalLaneDetected()) {
         int distance = roadLaneDetector.getLeftDistance();
         if (distance > 75 ) 
-            steeringClient.turnLeft(25);
+            steeringClient.turnLeft(40);
         else if (distance < 65) 
-           steeringClient.turnRight(25); 
+           steeringClient.turnRight(40); 
         else 
             steeringClient.center();
         currentAction = "skipping turn right";
