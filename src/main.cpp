@@ -46,10 +46,10 @@ std::pair<cv::Point2f, cv::Point2f> vectorToLinePointss(const cv::Vec4f& vector,
 
 int main(int argc, char *argv[]) {
     signal(SIGINT, signalHandler);
-    std::string outputVideoFile = argv[1];
+    // std::string outputVideoFile = argv[1];
     int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
-    cv::VideoWriter videoWriterRaw("raw_" + outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
-    cv::VideoWriter videoWriterResult("result_" + outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
+    // cv::VideoWriter videoWriterRaw("raw_" + outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
+    cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640, 368), true);
     Logger logger("/dev/null");
     Camera camera(logger);
     DistanceClient distanceClient(logger, "http://127.0.0.1:8000/distance");
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
         }
 
         cv::Mat frame = camera.getCurrentFrame();
-        videoWriterRaw.write(frame);
+        // videoWriterRaw.write(frame);
         roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
         if (roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
             rightLane = roadLaneDetectorCanny.getRightVerticalLane();
@@ -197,9 +197,9 @@ int main(int argc, char *argv[]) {
             cv::LINE_AA                 // Line type
         );
 
-        // cv::imshow("Result Frame", frame);
-        videoWriterResult.write(frame);
+        cv::imshow("Result Frame", frame);
         cv::waitKey(1);
+        videoWriterResult.write(frame);
         // videoWriter.write(frame);
         // frameDispatcherClient.sendFrame(frame, "result frame");
 
@@ -212,8 +212,8 @@ int main(int argc, char *argv[]) {
     // Release the camera capture object
     steeringClient.stop();
     cv::destroyAllWindows();
-    videoWriterRaw.release();
-    videoWriterResult.release();
+    // videoWriterRaw.release();
+    // videoWriterResult.release();
 
     return 0;
 }

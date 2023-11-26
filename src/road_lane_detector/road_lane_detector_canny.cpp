@@ -174,7 +174,7 @@ void calculateIntersection(const cv::Vec4f& line, double& y, double& x) {
 }
 
 double RoadLaneDetectorCanny::calculateDecentering(const int& imageCols, const int& imageHeight) {
-    double center_y = imageHeight * 1.0;
+    double center_y = imageHeight * 0.5;
     double leftX, rightX;
 
     calculateIntersection(leftVerticalLane, center_y, leftX);

@@ -12,31 +12,22 @@ void AutoPilot::controlSteering() {
     }
     int decenteredPixels = roadLaneDetector.getXPosition();
     if (roadLaneDetector.isRightVerticalLaneDetected() && roadLaneDetector.isLeftVerticalLaneDetected()) {
-        if (std::abs(decenteredPixels) <= 5) {
+        if (std::abs(decenteredPixels) < 10) {
             currentAction = "correction centering";
             steeringClient.center();
         } else if (decenteredPixels > 0) {
             currentAction = "correction right";
-            steeringClient.turnRight(40);
+            steeringClient.turnRight(std::min(decenteredPixels, 100));
         } else {
             currentAction = "correction left";
-            steeringClient.turnLeft(40);
+            steeringClient.turnLeft(std::min(std::abs(decenteredPixels), 100));
         }
-        steeringClient.driveForward(24);
+        // steeringClient.driveForward(24);
     } else if (roadLaneDetector.isRightVerticalLaneDetected()) {
         steeringClient.turnLeft(100);
-        steeringClient.driveForward(20);
+        // steeringClient.driveForward(20);
         currentAction = "making turn left";
-    } else if (roadLaneDetector.isLeftVerticalLaneDetected()) {
-        int distance = roadLaneDetector.getLeftDistance();
-        if (distance > 75 ) 
-            steeringClient.turnLeft(40);
-        else if (distance < 65) 
-           steeringClient.turnRight(40); 
-        else 
-            steeringClient.center();
-        currentAction = "skipping turn right";
-    }
+    } 
 }
 
 bool AutoPilot::isColissionDetected() {
