@@ -71,17 +71,15 @@ cv::Mat findLaneInsideEdges(const cv::Mat& edgedFrame, const cv::Mat& grayFrame)
     for (int y = 0; y < edgedFrame.rows; y++) {
         for (int x = 0; x < edgedFrame.cols; x++) {
             if (edgedFrame.at<uchar>(y, x) > 0 && x < edgedFrame.cols / 2) {
-                if (grayFrame.at<uchar>(y, x - distance) < grayFrame.at<uchar>(y, x + distance)) {
+                if (grayFrame.at<uchar>(y, x - distance) < grayFrame.at<uchar>(y, x + distance) ||
+                    grayFrame.at<uchar>(y, x - distance) > grayFrame.at<uchar>(y, x + distance) && (int)grayFrame.at<uchar>(y, x - distance) - grayFrame.at<uchar>(y, x + distance) < 2 * brightness) {
                     // std::cout << brightness << std::endl;
                     // std::cout << (int) grayFrame.at<uchar>(y, x - distance) << " " << (int) grayFrame.at<uchar>(y, x + distance) << std::endl;
                     toReturn.at<uchar>(y, x) = 0;
-                } else if (grayFrame.at<uchar>(y, x - distance) > grayFrame.at<uchar>(y, x + distance) && (int)grayFrame.at<uchar>(y, x - distance) - grayFrame.at<uchar>(y, x + distance) < 2 * brightness) {
-                    toReturn.at<uchar>(y, x) = 0;
                 }
             } else if (edgedFrame.at<uchar>(y, x) > 0 && x > edgedFrame.cols / 2) {
-                if (grayFrame.at<uchar>(y, x + distance) < grayFrame.at<uchar>(y, x - distance)) {
-                    toReturn.at<uchar>(y, x) = 0;
-                } else if (grayFrame.at<uchar>(y, x + distance) > grayFrame.at<uchar>(y, x - distance) && (int)grayFrame.at<uchar>(y, x + distance) - grayFrame.at<uchar>(y, x - distance) < 2 * brightness) {
+                if (grayFrame.at<uchar>(y, x + distance) < grayFrame.at<uchar>(y, x - distance) ||
+                    grayFrame.at<uchar>(y, x + distance) > grayFrame.at<uchar>(y, x - distance) && (int)grayFrame.at<uchar>(y, x + distance) - grayFrame.at<uchar>(y, x - distance) < 2 * brightness) {
                     toReturn.at<uchar>(y, x) = 0;
                 }
             }
