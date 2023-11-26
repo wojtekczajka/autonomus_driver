@@ -5,33 +5,34 @@ AutoPilot::AutoPilot(RoadLaneDetectorCanny& detector, ISteeringClient& steeringC
 }
 
 void AutoPilot::controlSteering() {
-    if (isColissionDetected()) {
+    if (isCollisionDetected()) {
         steeringClient.stop();
-        currentAction = "stop colission detected: " + std::to_string(distanceClient.getDistance()) + "cm";
+        currentAction = "stop collision detected: " + std::to_string(distanceClient.getDistance()) + "cm";
         return;
     }
+
     int decenteredPixels = roadLaneDetector.getXPosition();
     if (roadLaneDetector.isRightVerticalLaneDetected() && roadLaneDetector.isLeftVerticalLaneDetected()) {
-        if (std::abs(decenteredPixels) < 10) {
+        if (std::abs(decenteredPixels) < MIN_DEVIATION) {
             currentAction = "correction centering";
             steeringClient.center();
         } else if (decenteredPixels > 0) {
             currentAction = "correction right";
-            steeringClient.turnRight(std::min(decenteredPixels, 100));
+            steeringClient.turnRight(std::min(decenteredPixels, MAX_TURN_VALUE));
         } else {
             currentAction = "correction left";
-            steeringClient.turnLeft(std::min(std::abs(decenteredPixels), 100));
+            steeringClient.turnLeft(std::min(std::abs(decenteredPixels), MAX_TURN_VALUE));
         }
-        // steeringClient.driveForward(24);
+        // steeringClient.driveForward(THROTTLE_VALUE);
     } else if (roadLaneDetector.isRightVerticalLaneDetected()) {
-        steeringClient.turnLeft(100);
-        // steeringClient.driveForward(20);
+        steeringClient.turnLeft(MAX_TURN_VALUE);
+        // steeringClient.driveForward(THROTTLE_VALUE);
         currentAction = "making turn left";
-    } 
+    }
 }
 
-bool AutoPilot::isColissionDetected() {
-    return distanceClient.getDistance() < 30;
+bool AutoPilot::isCollisionDetected() {
+    return distanceClient.getDistance() < COLLISION_DISTANCE_THRESHOLD;
 }
 
 std::string AutoPilot::getCurrentAction() {

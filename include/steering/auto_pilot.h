@@ -8,11 +8,17 @@
 class AutoPilot {
    public:
     AutoPilot(RoadLaneDetectorCanny& detector, ISteeringClient& steeringClient, IDistanceClient& distanceClient, Logger& logger);
+
     void controlSteering();
     std::string getCurrentAction();
 
    private:
-    bool isColissionDetected();
+    static constexpr int COLLISION_DISTANCE_THRESHOLD = 30;
+    static constexpr int MIN_DEVIATION = 10;
+    static constexpr int MAX_TURN_VALUE = 100;
+    static constexpr int THROTTLE_VALUE = 23;
+
+    bool isCollisionDetected();
 
     RoadLaneDetectorCanny& roadLaneDetector;
     ISteeringClient& steeringClient;
