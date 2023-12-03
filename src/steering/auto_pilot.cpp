@@ -23,11 +23,15 @@ void AutoPilot::controlSteering() {
             currentAction = "correction left";
             steeringClient.turnLeft(std::min(std::abs(decenteredPixels), MAX_TURN_VALUE));
         }
-        // steeringClient.driveForward(THROTTLE_VALUE);
+        steeringClient.driveForward(THROTTLE_VALUE);
     } else if (roadLaneDetector.isRightVerticalLaneDetected()) {
         steeringClient.turnLeft(MAX_TURN_VALUE);
-        // steeringClient.driveForward(THROTTLE_VALUE);
+        steeringClient.driveForward(THROTTLE_VALUE * 1.1);
         currentAction = "making turn left";
+    } else if (roadLaneDetector.isLeftVerticalLaneDetected()) {
+        steeringClient.turnRight(MAX_TURN_VALUE);
+        steeringClient.driveForward(THROTTLE_VALUE * 1.1);
+        currentAction = "making turn right";
     }
 }
 

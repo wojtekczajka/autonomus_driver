@@ -1,11 +1,5 @@
 #pragma once
-
-#include <curl/curl.h>
-
-#include <string>
-
 #include "common/logger.h"
-#include "easywsclient/easywsclient.hpp"
 #include "steering/steering_client_interface.h"
 
 #include <cpr/cpr.h>
@@ -29,7 +23,6 @@ class SteeringClient : public ISteeringClient {
     void logInvalidValue(const std::string& action, const int& value) const;
 
     Logger& logger;
-    easywsclient::WebSocket::pointer ws;
     cpr::Url serverURL;
     int currentSpeedValue;
     int currentTurnValue;

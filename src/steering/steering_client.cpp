@@ -75,5 +75,10 @@ bool SteeringClient::excecuteControlRequest(const std::string& action, int value
     cpr::Response r = cpr::Post(serverURL,
                                 cpr::Body{"{\"action\":\"" + action + "\",\"value\":" + std::to_string(value) + "}"},
                                 cpr::Header{{"Content-Type", "application/json"}});
-    return true;
+    if (r.status_code == 200)
+        return true;
+    else {
+        logger.error("Steering request failed: " + r.text);
+        return false;
+    }
 }
