@@ -130,7 +130,8 @@ std::vector<cv::Vec4i> RoadLaneDetectorCanny::detectLines(const cv::Mat& process
     cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 180, 50, 20, 50);
     cv::Mat frame(processedFrame);
     drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
-    // frameDispatcherClient.sendFrame(frame, "detected lines");
+    cv::imshow("detected lines", frame);
+    cv::waitKey(0);
     return detectedLines;
 }
 

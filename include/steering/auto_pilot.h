@@ -16,7 +16,8 @@ class AutoPilot {
     static constexpr int COLLISION_DISTANCE_THRESHOLD = 30;
     static constexpr int MIN_DEVIATION = 5;
     static constexpr int MAX_TURN_VALUE = 100;
-    static constexpr int THROTTLE_VALUE = 25;
+    static constexpr int THROTTLE_VALUE = 30;
+    static constexpr double CORRECTION_SENSIVITY = 0.9;
 
     bool isCollisionDetected();
 
