@@ -63,8 +63,9 @@ TEST_P(AutoPilotParameterizedTestFixture, testAllActions) {
     EXPECT_EQ(action, correctAction);
 }
 
-TEST_F(AutiPilotTest, tadam) {
-    cv::Mat frame = cv::imread("../frames/frame110.jpg");
+TEST_F(AutiPilotTestA, tadam) {
+    cv::imshow("frame", "../frames/frame115.jpg");
+    cv::Mat frame = cv::imread("../frames/frame115.jpg");
     roadLaneDetectorCanny.processFrame(frame);
     autoPilot.controlSteering();
     EXPECT_EQ(5, 3 + 2);

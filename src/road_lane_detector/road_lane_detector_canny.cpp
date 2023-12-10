@@ -41,14 +41,9 @@ void fillTriangleWithZeros(cv::Mat& grayFrame, const cv::Point& point0, const cv
 
 cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     cv::Mat croppedFrame = frame.clone();
-
-    cv::Mat mask = cv::Mat::zeros(frame.size(), CV_8U);
-    int halfHeight = croppedFrame.rows * 0.4;
-    mask.rowRange(0, halfHeight).setTo(255);
-    croppedFrame.setTo(0, mask);
-    croppedFrame.setTo(cv::Scalar(0), bottomCircleMask);
     fillTriangleWithZeros(croppedFrame, cv::Point(0, frame.rows * 0.8), cv::Point(0, 0), cv::Point(frame.cols / 2, 0));
     fillTriangleWithZeros(croppedFrame, cv::Point(frame.cols, frame.rows * 0.8), cv::Point(frame.cols, 0), cv::Point(frame.cols / 2, 0));
+    cv::imshow("cropped frame", croppedFrame);
     return croppedFrame;
 }
 
@@ -103,14 +98,11 @@ cv::Mat removeHorizontallEdges(const cv::Mat& edgedFrame) {
 
 cv::Mat RoadLaneDetectorCanny::filterEdges(cv::Mat& edgedFrame, const cv::Mat& grayFrame) {
     cv::Mat insideEdges = findLaneInsideEdges(edgedFrame, grayFrame);
-    // frameDispatcherClient.sendFrame(insideEdges, "inside");
     return insideEdges;
-    // return removeHorizontallEdges(insideEdges);
 }
 
 cv::Mat RoadLaneDetectorCanny::preprocessFrame(const cv::Mat& frame) {
     cv::Mat greyFrame = convertFrameToGrayscale(frame);
-    // frameDispatcherClient.sendFrame(cropRoiFromFrame(greyFrame), "cropped frame");
     cv::medianBlur(greyFrame, greyFrame, 11);
     cv::Mat resultFrame = greyFrame;
     resultFrame = autoCanny(resultFrame);
