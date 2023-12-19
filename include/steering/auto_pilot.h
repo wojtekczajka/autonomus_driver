@@ -13,6 +13,12 @@ class AutoPilot {
     std::string getCurrentAction();
 
    private:
+    enum class NextAction {
+        TurnLeft,
+        TurnRight,
+        DriveForward
+    };
+
     static constexpr int COLLISION_DISTANCE_THRESHOLD = 30;
     static constexpr int MIN_DEVIATION = 5;
     static constexpr int MAX_TURN_VALUE = 100;
@@ -26,4 +32,7 @@ class AutoPilot {
     IDistanceClient& distanceClient;
     Logger& logger;
     std::string currentAction;
+    NextAction nextAction;
+    int counter = 0;
+    bool turningProcedureStarted;
 };

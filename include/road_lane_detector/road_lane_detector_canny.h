@@ -14,6 +14,8 @@ class RoadLaneDetectorCanny {
     bool isRightHorizontalBottomLaneDetected();
     bool isLeftHorizontalTopLaneDetected();
     bool isRightHorizontalTopLaneDetected();
+    bool isTurnRightDetected();
+    bool isTurnLeftDetected();
     int getXPosition();
     int getLeftDistance();
     int getRightDistance();
@@ -36,7 +38,7 @@ class RoadLaneDetectorCanny {
     void classifyPoints(const std::vector<cv::Vec4i>& lines);
     void classifyHorizontalPoints(const std::vector<cv::Vec4i>& lines);
 
-    bool leftVerticalLaneDetected, rightVerticalLaneDetected, leftHorizontalBottomLaneDetected, leftHorizontalTopLaneDetected, rightHorizontalBottomLaneDetected, rightHorizontalTopLaneDetected;
+    bool leftVerticalLaneDetected, rightVerticalLaneDetected, leftHorizontalBottomLaneDetected, leftHorizontalTopLaneDetected, rightHorizontalBottomLaneDetected, rightHorizontalTopLaneDetected, turnLeftDetected, turnRightDetected;
     int xPosition, frameWidth, frameHeight;
     std::vector<cv::Point> rightPoints, leftPoints, horizontalPoints;
     cv::Vec4f leftVerticalLane, rightVerticalLane, leftHorizontalBottomLane, leftHorizontalTopLane, rightHorizontalBottomLane, rightHorizontalTopLane;

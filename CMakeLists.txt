@@ -19,7 +19,6 @@ add_executable(autonomus_driver
     src/distance/distance_client.cpp
     src/steering/steering_client.cpp
     src/steering/auto_pilot.cpp
-    src/easywsclient/easywsclient.cpp
     src/road_lane_detector/road_lane_detector_canny.cpp
 )
 
@@ -69,9 +68,9 @@ add_executable(
     src/common/logger.cpp
     src/distance/distance_client.cpp
     src/steering/steering_client.cpp
-    src/easywsclient/easywsclient.cpp
     src/road_lane_detector/road_lane_detector_canny.cpp
 )
+
 target_link_libraries(
     auto_pilot_test
     GTest::gtest_main

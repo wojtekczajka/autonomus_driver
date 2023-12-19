@@ -8,7 +8,9 @@ RoadLaneDetectorCanny::RoadLaneDetectorCanny() : xPosition(0),
                                                  leftHorizontalBottomLaneDetected(false),
                                                  leftHorizontalTopLaneDetected(false),
                                                  rightHorizontalBottomLaneDetected(false),
-                                                 rightHorizontalTopLaneDetected(false) {
+                                                 rightHorizontalTopLaneDetected(false),
+                                                 turnLeftDetected(false),
+                                                 turnRightDetected(false) {
     ConfigParser configParser("camera_config.txt");
     frameWidth = configParser.getValue<int>("FRAME_WIDTH", 640);
     frameHeight = configParser.getValue<int>("FRAME_HEIGHT", 368);
@@ -296,6 +298,9 @@ void RoadLaneDetectorCanny::processFrame(const cv::Mat& frame) {
         rightHorizontalBottomLane = convertToLineEquation(rightBottomLines[0]);
     if (rightHorizontalTopLaneDetected)
         rightHorizontalTopLane = convertToLineEquation(rightBottomLines[rightBottomLines.size() - 1]);
+
+    turnLeftDetected = leftHorizontalBottomLaneDetected && leftHorizontalTopLaneDetected;
+    turnRightDetected = rightHorizontalBottomLaneDetected && rightHorizontalTopLaneDetected;
 }
 
 int RoadLaneDetectorCanny::getLeftDistance() {
@@ -356,4 +361,12 @@ bool RoadLaneDetectorCanny::isLeftHorizontalTopLaneDetected() {
 
 bool RoadLaneDetectorCanny::isRightHorizontalTopLaneDetected() {
     return rightHorizontalTopLaneDetected;
+}
+
+bool RoadLaneDetectorCanny::isTurnLeftDetected() {
+    return turnLeftDetected;
+}
+
+bool RoadLaneDetectorCanny::isTurnRightDetected() {
+    return turnRightDetected;
 }
