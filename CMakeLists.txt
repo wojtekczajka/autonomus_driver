@@ -13,8 +13,9 @@ file(COPY "src/steering/curl_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
 
 add_executable(autonomus_driver
     src/main.cpp
-    src/common/logger.cpp
+    src/common/drawer.cpp
     src/common/config_parser.cpp
+    src/common/logger.cpp
     src/camera/camera.cpp
     src/distance/distance_client.cpp
     src/steering/steering_client.cpp

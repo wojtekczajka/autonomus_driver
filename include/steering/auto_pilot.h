@@ -11,6 +11,7 @@ class AutoPilot {
 
     void controlSteering();
     std::string getCurrentAction();
+    double getDistanceToObstancle();
 
    private:
     enum class NextAction {
@@ -34,5 +35,6 @@ class AutoPilot {
     std::string currentAction;
     NextAction nextAction;
     int counter = 0;
+    double distanceToObstacle;
     bool turningProcedureStarted;
 };

@@ -4,10 +4,15 @@ AutoPilot::AutoPilot(RoadLaneDetectorCanny& detector, ISteeringClient& steeringC
     : roadLaneDetector(detector), steeringClient(steeringClient), distanceClient(distanceClient), logger(logger), nextAction(NextAction::TurnLeft), turningProcedureStarted(false) {
 }
 
+double AutoPilot::getDistanceToObstancle() {
+    return distanceToObstacle;
+}
+
 void AutoPilot::controlSteering() {
+    distanceToObstacle = distanceClient.getDistance();
     if (isCollisionDetected()) {
         steeringClient.stop();
-        currentAction = "stop collision detected: " + std::to_string(distanceClient.getDistance()) + "cm";
+        currentAction = "stop collision detected";
         return;
     }
 
@@ -46,7 +51,7 @@ void AutoPilot::controlSteering() {
 }
 
 bool AutoPilot::isCollisionDetected() {
-    return distanceClient.getDistance() < COLLISION_DISTANCE_THRESHOLD;
+    return distanceToObstacle < COLLISION_DISTANCE_THRESHOLD;
 }
 
 std::string AutoPilot::getCurrentAction() {
