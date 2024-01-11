@@ -5,10 +5,6 @@
 RoadLaneDetectorCanny::RoadLaneDetectorCanny() : xPosition(0),
                                                  rightVerticalLaneDetected(false),
                                                  leftVerticalLaneDetected(false),
-                                                 leftHorizontalBottomLaneDetected(false),
-                                                 leftHorizontalTopLaneDetected(false),
-                                                 rightHorizontalBottomLaneDetected(false),
-                                                 rightHorizontalTopLaneDetected(false),
                                                  turnLeftDetected(false),
                                                  turnRightDetected(false) {
     ConfigParser configParser("camera_config.txt");
@@ -47,7 +43,6 @@ cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     croppedFrame.setTo(cv::Scalar(0), bottomCircleMask);
     fillTriangleWithZeros(croppedFrame, cv::Point(0, frame.rows * 0.8), cv::Point(0, 0), cv::Point(frame.cols / 2, 0));
     fillTriangleWithZeros(croppedFrame, cv::Point(frame.cols, frame.rows * 0.8), cv::Point(frame.cols, 0), cv::Point(frame.cols / 2, 0));
-    // cv::imshow("cropped frame", croppedFrame);
     return croppedFrame;
 }
 
@@ -72,8 +67,6 @@ cv::Mat findLaneInsideEdges(const cv::Mat& edgedFrame, const cv::Mat& grayFrame)
             if (edgedFrame.at<uchar>(y, x) > 0 && x < edgedFrame.cols / 2) {
                 if (grayFrame.at<uchar>(y, x - distance) < grayFrame.at<uchar>(y, x + distance) ||
                     grayFrame.at<uchar>(y, x - distance) > grayFrame.at<uchar>(y, x + distance) && (int)grayFrame.at<uchar>(y, x - distance) - grayFrame.at<uchar>(y, x + distance) < 2 * brightness) {
-                    // std::cout << brightness << std::endl;
-                    // std::cout << (int) grayFrame.at<uchar>(y, x - distance) << " " << (int) grayFrame.at<uchar>(y, x + distance) << std::endl;
                     toReturn.at<uchar>(y, x) = 0;
                 }
             } else if (edgedFrame.at<uchar>(y, x) > 0 && x > edgedFrame.cols / 2) {
@@ -81,19 +74,6 @@ cv::Mat findLaneInsideEdges(const cv::Mat& edgedFrame, const cv::Mat& grayFrame)
                     grayFrame.at<uchar>(y, x + distance) > grayFrame.at<uchar>(y, x - distance) && (int)grayFrame.at<uchar>(y, x + distance) - grayFrame.at<uchar>(y, x - distance) < 2 * brightness) {
                     toReturn.at<uchar>(y, x) = 0;
                 }
-            }
-        }
-    }
-    return toReturn;
-}
-
-cv::Mat removeHorizontallEdges(const cv::Mat& edgedFrame) {
-    cv::Mat toReturn = edgedFrame;
-    for (int y = 0; y < edgedFrame.rows; y++) {
-        for (int x = 0; x < edgedFrame.cols; x++) {
-            if (edgedFrame.at<uchar>(y, x) > 0) {
-                if (edgedFrame.at<uchar>(y, x - 1) == edgedFrame.at<uchar>(y, x + 1))
-                    toReturn.at<uchar>(y, x) = 0;
             }
         }
     }
@@ -130,16 +110,6 @@ std::vector<cv::Vec4i> RoadLaneDetectorCanny::detectLines(const cv::Mat& process
     return detectedLines;
 }
 
-std::vector<cv::Vec4i> detectHorizontalLines(const cv::Mat& processedFrame) {
-    std::vector<cv::Vec4i> detectedLines;
-    cv::HoughLinesP(processedFrame, detectedLines, 2, CV_PI / 180, 50, 5, 40);
-    cv::Mat frame(processedFrame);
-    drawDetectedLines(frame, detectedLines, cv::Scalar(255, 255, 255));
-    cv::imshow("detected lines", frame);
-    // cv::waitKey(1);
-    return detectedLines;
-}
-
 void RoadLaneDetectorCanny::classifyPoints(const std::vector<cv::Vec4i>& lines) {
     rightPoints.clear();
     leftPoints.clear();
@@ -157,20 +127,6 @@ void RoadLaneDetectorCanny::classifyPoints(const std::vector<cv::Vec4i>& lines) 
                 rightPoints.push_back(cv::Point(x1, y1));
                 rightPoints.push_back(cv::Point(x2, y2));
             }
-        }
-    }
-}
-
-void RoadLaneDetectorCanny::classifyHorizontalPoints(const std::vector<cv::Vec4i>& lines) {
-    horizontalPoints.clear();
-    for (cv::Vec4i line : lines) {
-        int x1 = line[0], y1 = line[1], x2 = line[2], y2 = line[3];
-        double slope = static_cast<double>(y2 - y1) / (x2 - x1);
-        if (std::abs(slope) > 0.3) {
-            continue;
-        } else {
-            horizontalPoints.push_back(cv::Point(x1, y1));
-            horizontalPoints.push_back(cv::Point(x2, y2));
         }
     }
 }
@@ -236,53 +192,6 @@ std::pair<cv::Vec4f, cv::Vec4f> RoadLaneDetectorCanny::getLanes() {
     return std::make_pair(rightVerticalLane, leftVerticalLane);
 }
 
-cv::Vec4f convertToLineEquation(const cv::Vec4i& line) {
-    cv::Vec4f lineEquation;
-    float x1 = static_cast<float>(line[0]);
-    float y1 = static_cast<float>(line[1]);
-    float x2 = static_cast<float>(line[2]);
-    float y2 = static_cast<float>(line[3]);
-
-    // Calculate vx, vy
-    float dx = x2 - x1;
-    float dy = y2 - y1;
-    float length = sqrt(dx * dx + dy * dy);
-    float vx = dx / length;
-    float vy = dy / length;
-
-    // Calculate x0, y0
-    float x0 = x1;
-    float y0 = y1;
-
-    lineEquation[0] = vx;
-    lineEquation[1] = vy;
-    lineEquation[2] = x0;
-    lineEquation[3] = y0;
-
-    return lineEquation;
-}
-
-cv::Point2f getIntersection(const cv::Vec4f& line1, const cv::Vec4f& line2) {
-    // Extracting the components of the line equations
-    float vx1 = line1[0], vy1 = line1[1], x0_1 = line1[2], y0_1 = line1[3];
-    float vx2 = line2[0], vy2 = line2[1], x0_2 = line2[2], y0_2 = line2[3];
-
-    // Computing the determinant
-    float det = vx1 * vy2 - vx2 * vy1;
-    if (fabs(det) < 1e-6) return cv::Point2f(-1, -1);  // Lines are parallel or coincident
-
-    // Finding the intersection point
-    float t = (vy2 * (x0_2 - x0_1) - vx2 * (y0_2 - y0_1)) / det;
-    float intersectX = x0_1 + t * vx1;
-    float intersectY = y0_1 + t * vy1;
-
-    return cv::Point2f(intersectX, intersectY);
-}
-
-float distanceBetweenPoints(const cv::Point2f& point1, const cv::Point2f& point2) {
-    return sqrt(pow(point2.x - point1.x, 2) + pow(point2.y - point1.y, 2));
-}
-
 void RoadLaneDetectorCanny::processFrame(const cv::Mat& frame) {
     preprocessedFrame = preprocessFrame(frame);
     std::vector<cv::Vec4i> detectedLines = detectLines(preprocessedFrame);
@@ -295,40 +204,12 @@ void RoadLaneDetectorCanny::processFrame(const cv::Mat& frame) {
     findTurns();
 }
 
-int RoadLaneDetectorCanny::getLeftDistance() {
-    int a = leftVerticalLane[1] / leftVerticalLane[0];
-    int b = leftVerticalLane[3] - (a * leftVerticalLane[2]);
-    return ((frameHeight - b) / a);
-}
-
-int RoadLaneDetectorCanny::getRightDistance() {
-    float a = rightVerticalLane[1] / rightVerticalLane[0];
-    float b = rightVerticalLane[3] - (a * rightVerticalLane[2]);
-    return frameWidth - ((frameHeight - b) / a);
-}
-
 cv::Vec4f RoadLaneDetectorCanny::getRightVerticalLane() {
     return rightVerticalLane;
 }
 
 cv::Vec4f RoadLaneDetectorCanny::getLeftVerticalLane() {
     return leftVerticalLane;
-}
-
-cv::Vec4f RoadLaneDetectorCanny::getLeftHorizontalBottomLane() {
-    return leftHorizontalBottomLane;
-}
-
-cv::Vec4f RoadLaneDetectorCanny::getRightHorizontalBottomLane() {
-    return rightHorizontalBottomLane;
-}
-
-cv::Vec4f RoadLaneDetectorCanny::getLeftHorizontalTopLane() {
-    return leftHorizontalTopLane;
-}
-
-cv::Vec4f RoadLaneDetectorCanny::getRightHorizontalTopLane() {
-    return rightHorizontalTopLane;
 }
 
 bool RoadLaneDetectorCanny::isRightVerticalLaneDetected() {
@@ -339,34 +220,10 @@ bool RoadLaneDetectorCanny::isLeftVerticalLaneDetected() {
     return leftVerticalLaneDetected;
 }
 
-bool RoadLaneDetectorCanny::isLeftHorizontalBottomLaneDetected() {
-    return leftHorizontalBottomLaneDetected;
-}
-
-bool RoadLaneDetectorCanny::isRightHorizontalBottomLaneDetected() {
-    return rightHorizontalBottomLaneDetected;
-}
-
-bool RoadLaneDetectorCanny::isLeftHorizontalTopLaneDetected() {
-    return leftHorizontalTopLaneDetected;
-}
-
-bool RoadLaneDetectorCanny::isRightHorizontalTopLaneDetected() {
-    return rightHorizontalTopLaneDetected;
-}
-
 bool RoadLaneDetectorCanny::isTurnLeftDetected() {
     return turnLeftDetected;
 }
 
 bool RoadLaneDetectorCanny::isTurnRightDetected() {
     return turnRightDetected;
-}
-
-int RoadLaneDetectorCanny::getLeftMidpointY() {
-    return leftMidpointY;
-}
-
-int RoadLaneDetectorCanny::getRightMidpointY() {
-    return rightMidpointY;
 }

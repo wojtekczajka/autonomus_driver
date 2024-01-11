@@ -10,24 +10,12 @@ class RoadLaneDetectorCanny {
     void processFrame(const cv::Mat& frame);
     bool isRightVerticalLaneDetected();
     bool isLeftVerticalLaneDetected();
-    bool isLeftHorizontalBottomLaneDetected();
-    bool isRightHorizontalBottomLaneDetected();
-    bool isLeftHorizontalTopLaneDetected();
-    bool isRightHorizontalTopLaneDetected();
     bool isTurnRightDetected();
     bool isTurnLeftDetected();
     int getXPosition();
-    int getLeftDistance();
-    int getRightDistance();
-    int getLeftMidpointY();
-    int getRightMidpointY();
     std::pair<cv::Vec4f, cv::Vec4f> getLanes();
     cv::Vec4f getRightVerticalLane();
     cv::Vec4f getLeftVerticalLane();
-    cv::Vec4f getLeftHorizontalBottomLane();
-    cv::Vec4f getRightHorizontalBottomLane();
-    cv::Vec4f getLeftHorizontalTopLane();
-    cv::Vec4f getRightHorizontalTopLane();
 
    private:
     static constexpr int MIN_LANES_DISTANCE = 125;
@@ -42,13 +30,10 @@ class RoadLaneDetectorCanny {
     cv::Mat cropRoiFromFrame(const cv::Mat& frame);
     void autoCanny(const cv::Mat& frame, double sigma = 0.33);
     void classifyPoints(const std::vector<cv::Vec4i>& lines);
-    void classifyHorizontalPoints(const std::vector<cv::Vec4i>& lines);
 
     bool leftVerticalLaneDetected, rightVerticalLaneDetected, leftHorizontalBottomLaneDetected, leftHorizontalTopLaneDetected, rightHorizontalBottomLaneDetected, rightHorizontalTopLaneDetected, turnLeftDetected, turnRightDetected;
     int xPosition, frameWidth, frameHeight, leftMidpointY, rightMidpointY;
     std::vector<cv::Point> rightPoints, leftPoints, horizontalPoints;
-    cv::Vec4f leftVerticalLane, rightVerticalLane, leftHorizontalBottomLane, leftHorizontalTopLane, rightHorizontalBottomLane, rightHorizontalTopLane;
-    std::vector<cv::Vec4i> leftBottomLines, rightBottomLines;
+    cv::Vec4f leftVerticalLane, rightVerticalLane;
     cv::Mat frameAfterCanny, bottomCircleMask, preprocessedFrame;
-    cv::Point mostDistantPointOnLeftVerticalLane, mostDistantPointOnRightVerticalLane;
 };
