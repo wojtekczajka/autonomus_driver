@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
     // cv::VideoWriter videoWriterRaw("raw_" + outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
     cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640, 368), true);
-    Logger logger("log1.log");
+    Logger logger;
     Camera camera(logger);
     DistanceClient distanceClient(logger, "http://127.0.0.1:8000/distance");
     SteeringClient steeringClient(logger, "http://127.0.0.1:8000/control");
