@@ -13,6 +13,8 @@ RoadLaneDetectorCanny::RoadLaneDetectorCanny() : xPosition(0),
     int radius = frameWidth / 2;
     bottomCircleMask = cv::Mat::zeros(cv::Point(frameWidth, frameHeight), CV_8U);
     cv::circle(bottomCircleMask, cv::Point(frameWidth / 2, frameHeight), radius / 3.5, cv::Scalar(255), -1);
+    upperRoi = cv::Rect(0, 0, frameWidth, frameHeight * 0.60);
+    lowerRoi = cv::Rect(0, frameHeight * 0.75, frameWidth, frameHeight * 0.25);
 }
 
 cv::Mat convertFrameToGrayscale(const cv::Mat& frame) {
@@ -139,29 +141,27 @@ void RoadLaneDetectorCanny::findLanes() {
 }
 
 void RoadLaneDetectorCanny::findTurns() {
-    cv::Rect upperRoi(0, 0, preprocessedFrame.cols, preprocessedFrame.rows * 0.40);  // Define the ROI as the upper 20% of the image
-    preprocessedFrame(upperRoi) = cv::Scalar(0);
-    cv::Rect lowerRoi(0, preprocessedFrame.rows * 0.65, preprocessedFrame.cols, preprocessedFrame.rows * 0.35);  // Define the ROI as the lower 35% of the image
-    preprocessedFrame(lowerRoi) = cv::Scalar(0);
-    std::vector<cv::Vec4i> detectedLines = detectLines(preprocessedFrame);
-    std::vector<cv::Point> lp, rp;
-    for (cv::Vec4i line : detectedLines) {
-        int x1 = line[0], y1 = line[1], x2 = line[2], y2 = line[3];
-        double slope = static_cast<double>(y2 - y1) / (x2 - x1);
-        if (std::abs(slope) < 0.5) {
-            continue;
-        } else {
-            if (slope <= 0) {
-                lp.push_back(cv::Point(x1, y1));
-                lp.push_back(cv::Point(x2, y2));
-            } else {
-                rp.push_back(cv::Point(x1, y1));
-                rp.push_back(cv::Point(x2, y2));
-            }
-        }
-    }
-    turnLeftDetected = lp.empty();
-    turnRightDetected = rp.empty();
+    cv::Mat tempFrame = preprocessedFrame.clone();
+    tempFrame(upperRoi) = cv::Scalar(0);
+    tempFrame(lowerRoi) = cv::Scalar(0);
+
+    std::vector<cv::Vec4i> detectedLines = detectLines(tempFrame);
+    classifyPoints(detectedLines);
+
+    turnLeftDetected = leftPoints.empty();
+    turnRightDetected = rightPoints.empty();
+}
+
+void RoadLaneDetectorCanny::findRoadForwardBeyondIntersectionDetected() {
+    cv::Mat tempFrame = preprocessedFrame.clone();
+    int blackenHeight = static_cast<int>(tempFrame.rows * 0.40);
+    cv::Rect blackenRoi(0, tempFrame.rows - blackenHeight, tempFrame.cols, blackenHeight);
+    tempFrame(blackenRoi) = cv::Scalar(0);
+
+    std::vector<cv::Vec4i> detectedLines = detectLines(tempFrame);
+    classifyPoints(detectedLines);
+
+    roadForwardBeyondIntersectionDetected = leftPoints.size() && rightPoints.size();
 }
 
 void calculateIntersection(const cv::Vec4f& line, double& y, double& x) {
@@ -202,6 +202,7 @@ void RoadLaneDetectorCanny::processFrame(const cv::Mat& frame) {
     if (rightVerticalLaneDetected && leftVerticalLaneDetected)
         xPosition = calculateDecentering(frame.cols, frame.rows);
     findTurns();
+    findRoadForwardBeyondIntersectionDetected();
 }
 
 cv::Vec4f RoadLaneDetectorCanny::getRightVerticalLane() {
@@ -226,4 +227,8 @@ bool RoadLaneDetectorCanny::isTurnLeftDetected() {
 
 bool RoadLaneDetectorCanny::isTurnRightDetected() {
     return turnRightDetected;
+}
+
+bool RoadLaneDetectorCanny::isRoadForwardBeyondIntersectionDetected() {
+    return roadForwardBeyondIntersectionDetected;
 }

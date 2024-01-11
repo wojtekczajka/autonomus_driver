@@ -12,6 +12,7 @@ class RoadLaneDetectorCanny {
     bool isLeftVerticalLaneDetected();
     bool isTurnRightDetected();
     bool isTurnLeftDetected();
+    bool isRoadForwardBeyondIntersectionDetected();
     int getXPosition();
     std::pair<cv::Vec4f, cv::Vec4f> getLanes();
     cv::Vec4f getRightVerticalLane();
@@ -25,15 +26,17 @@ class RoadLaneDetectorCanny {
     std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame);
     void findLanes();
     void findTurns();
+    void findRoadForwardBeyondIntersectionDetected();
     double calculateDecentering(const int& imageCols, const int& imageHeight);
     cv::Mat preprocessFrame(const cv::Mat& frame);
     cv::Mat cropRoiFromFrame(const cv::Mat& frame);
     void autoCanny(const cv::Mat& frame, double sigma = 0.33);
     void classifyPoints(const std::vector<cv::Vec4i>& lines);
 
-    bool leftVerticalLaneDetected, rightVerticalLaneDetected, leftHorizontalBottomLaneDetected, leftHorizontalTopLaneDetected, rightHorizontalBottomLaneDetected, rightHorizontalTopLaneDetected, turnLeftDetected, turnRightDetected;
+    bool leftVerticalLaneDetected, rightVerticalLaneDetected, turnLeftDetected, turnRightDetected, roadForwardBeyondIntersectionDetected;
     int xPosition, frameWidth, frameHeight, leftMidpointY, rightMidpointY;
     std::vector<cv::Point> rightPoints, leftPoints, horizontalPoints;
     cv::Vec4f leftVerticalLane, rightVerticalLane;
     cv::Mat frameAfterCanny, bottomCircleMask, preprocessedFrame;
+    cv::Rect upperRoi, lowerRoi;
 };

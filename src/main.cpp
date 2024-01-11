@@ -78,12 +78,13 @@ int main(int argc, char* argv[]) {
         drawer.updateText("distanceToObstacle", std::to_string(autoPilot.getDistanceToObstancle()));
         drawer.updateText("decenteredValue", std::to_string(roadLaneDetectorCanny.getXPosition()));
         drawer.updateText("FPS", std::to_string(camera.getFPS()));
+        drawer.updateText("roadForwardDetected", std::to_string(roadLaneDetectorCanny.isRoadForwardBeyondIntersectionDetected()));
         drawer.drawAllText(textRectangle);
 
         cv::Mat displayImage = drawer.concatenateFrames(frame, textRectangle);
         cv::imshow("Result Frame", displayImage);
         cv::waitKey(1);
-        videoWriterResult.write(frame);
+        videoWriterResult.write(displayImage);
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {
             break;
