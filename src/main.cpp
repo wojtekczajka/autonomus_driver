@@ -51,10 +51,10 @@ int main(int argc, char* argv[]) {
     AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient, distanceClient, logger);
 
     if (!camera.isOpened()) {
-        std::cerr << "Error: Couldn't open the camera." << std::endl;
+        logger.error("Couldn't open the camera.");
         return -1;
     }
-    
+
     steeringClient.start();
 
     while (true) {

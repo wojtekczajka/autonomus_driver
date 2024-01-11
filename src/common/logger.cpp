@@ -28,8 +28,10 @@ std::string Logger::generateLogFileName() {
 
 void Logger::createSymlink(const std::string& logFileName) {
     std::string symlinkPath = "LATEST_LOG_FILE";
-    unlink(symlinkPath.c_str()); // Remove old symlink if exists
-    symlink(logFileName.c_str(), symlinkPath.c_str());
+    unlink(symlinkPath.c_str());
+    if (symlink(logFileName.c_str(), symlinkPath.c_str())) {
+        perror("Failed to create symlink for log file");
+    }
 }
 
 void Logger::info(const std::string& message) {
