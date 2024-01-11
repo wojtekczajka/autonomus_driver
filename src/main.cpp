@@ -21,33 +21,6 @@ void drawLineX(cv::Mat& image, const cv::Vec4f& line, const int& x1, const int& 
     cv::line(image, cv::Point2f(x1, a * x1 + b), cv::Point2f(x2, a * x2 + b), color, thickness);
 }
 
-cv::Point2f calculateLineIntersection(const cv::Vec4f& line1, const cv::Vec4f& line2) {
-    float vx1 = line1[0];
-    float vy1 = line1[1];
-    float x01 = line1[2];
-    float y01 = line1[3];
-
-    float vx2 = line2[0];
-    float vy2 = line2[1];
-    float x02 = line2[2];
-    float y02 = line2[3];
-
-    // Calculate determinant
-    float det = vx1 * vy2 - vx2 * vy1;
-
-    if (std::abs(det) < 1e-6) {
-        // Lines are nearly parallel, so there is no unique intersection point.
-        // Return a point indicating no intersection or handle accordingly.
-        return cv::Point2f(std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN());
-    }
-
-    // Calculate intersection point
-    float x = ((x02 - x01) * vy2 - (y02 - y01) * vx2) / det;
-    float y = ((y02 - y01) * vx1 - (x02 - x01) * vy1) / det;
-
-    return cv::Point2f(x, y);
-}
-
 volatile bool shouldExit = false;
 
 void signalHandler(int signum) {
@@ -72,12 +45,14 @@ std::pair<cv::Point2f, cv::Point2f> vectorToLinePointss(const cv::Vec4f& vector,
 }
 
 int main(int argc, char* argv[]) {
+    std::string turnLeftDetected = "false";
+    std::string turnRightDetected = "false";
     signal(SIGINT, signalHandler);
     // std::string outputVideoFile = argv[1];
     int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
     // cv::VideoWriter videoWriterRaw("raw_" + outputVideoFile, fourcc, 15, cv::Size(640, 368), true);
     cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640, 368), true);
-    Logger logger("/dev/null");
+    Logger logger("log1.log");
     Camera camera(logger);
     DistanceClient distanceClient(logger, "http://127.0.0.1:8000/distance");
     SteeringClient steeringClient(logger, "http://127.0.0.1:8000/control");
@@ -108,47 +83,17 @@ int main(int argc, char* argv[]) {
             leftLane = roadLaneDetectorCanny.getLeftVerticalLane();
             drawLineY(frame, leftLane, frame.rows, frame.rows / 2, cv::Scalar(0, 255, 0));
         }
-        if (roadLaneDetectorCanny.isLeftHorizontalBottomLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
-            leftBottomLane = roadLaneDetectorCanny.getLeftHorizontalBottomLane();
-            drawLineX(frame, leftBottomLane, 0, frame.cols * 0.35, cv::Scalar(0, 0, 255));
-        }
-        if (roadLaneDetectorCanny.isLeftHorizontalTopLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
-            leftTopLane = roadLaneDetectorCanny.getLeftHorizontalTopLane();
-            drawLineX(frame, leftTopLane, 0, frame.cols * 0.35, cv::Scalar(0, 255, 255));
-        }
-        if (roadLaneDetectorCanny.isRightHorizontalBottomLaneDetected() && roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
-            rightBottomLane = roadLaneDetectorCanny.getRightHorizontalBottomLane();
-            drawLineX(frame, rightBottomLane, frame.cols, frame.cols * 0.65, cv::Scalar(128, 0, 255));
-        }
-        if (roadLaneDetectorCanny.isRightHorizontalTopLaneDetected() && roadLaneDetectorCanny.isRightVerticalLaneDetected()) {
-            rightTopLane = roadLaneDetectorCanny.getRightHorizontalTopLane();
-            drawLineX(frame, rightTopLane, frame.cols * 0.65, frame.cols, cv::Scalar(128, 0, 255));
-        }
         if (roadLaneDetectorCanny.isRightVerticalLaneDetected() && roadLaneDetectorCanny.isLeftVerticalLaneDetected()) {
             decenteredPixels = roadLaneDetectorCanny.getXPosition();
         }
 
         autoPilot.controlSteering();
         std::string actionText = "Action: " + autoPilot.getCurrentAction();
-        // frameDispatcherClient.sendFrame(frame, "original frame");
 
-        float a = rightLane[1] / rightLane[0];
-        float b = rightLane[3] - (a * rightLane[2]);
-        cv::Point p1((frame.rows - b) / a, frame.rows - 5);
-        cv::Point p2(frame.cols, frame.rows - 5);
-        float distance1 = frame.cols - ((frame.rows - b) / a);
-        cv::line(frame, p1, p2, cv::Scalar(0, 255, 0), 3);
-        a = leftLane[1] / leftLane[0];
-        b = leftLane[3] - (a * leftLane[2]);
-        p1 = cv::Point((frame.rows - b) / a, frame.rows - 5);
-        p2 = cv::Point(0, frame.rows - 5);
-        float distance2 = ((frame.rows - b) / a);
-        cv::line(frame, p1, p2, cv::Scalar(255, 0, 0), 3);
-        // drawLineX(frame, horizontalLane, 0, frame.cols, cv::Scalar(255, 0, 0));
-
+        cv::Mat textRectangle = cv::Mat::zeros(frame.rows, frame.cols, frame.type());
         cv::putText(
-            frame,                                           // Target image
-            "right distance: " + std::to_string(distance1),  // Text to be added
+            textRectangle,                                           // Target image
+            "turn left detected: " + std::to_string(roadLaneDetectorCanny.isTurnLeftDetected()),  // Text to be added
             cv::Point(10, 210),                              // Position
             cv::FONT_HERSHEY_SIMPLEX,                        // Font type
             1.0,                                             // Font scale
@@ -158,8 +103,8 @@ int main(int argc, char* argv[]) {
         );
 
         cv::putText(
-            frame,                                          // Target image
-            "left distance: " + std::to_string(distance2),  // Text to be added
+            textRectangle,                                          // Target image
+            "turn right detected: " + std::to_string(roadLaneDetectorCanny.isTurnRightDetected()),  // Text to be added
             cv::Point(10, 180),                             // Position
             cv::FONT_HERSHEY_SIMPLEX,                       // Font type
             1.0,                                            // Font scale
@@ -169,7 +114,7 @@ int main(int argc, char* argv[]) {
         );
 
         cv::putText(
-            frame,                                                                                          // Target image
+            textRectangle,                                                                                          // Target image
             "right line detected: " + std::to_string(roadLaneDetectorCanny.isRightVerticalLaneDetected()),  // Text to be added
             cv::Point(10, 150),                                                                             // Position
             cv::FONT_HERSHEY_SIMPLEX,                                                                       // Font type
@@ -180,7 +125,7 @@ int main(int argc, char* argv[]) {
         );
 
         cv::putText(
-            frame,                                                                                        // Target image
+            textRectangle,                                                                                        // Target image
             "left line detected: " + std::to_string(roadLaneDetectorCanny.isLeftVerticalLaneDetected()),  // Text to be added
             cv::Point(10, 120),                                                                           // Position
             cv::FONT_HERSHEY_SIMPLEX,                                                                     // Font type
@@ -191,7 +136,7 @@ int main(int argc, char* argv[]) {
         );
 
         cv::putText(
-            frame,                      // Target image
+            textRectangle,                      // Target image
             actionText,                 // Text to be added
             cv::Point(10, 90),          // Position
             cv::FONT_HERSHEY_SIMPLEX,   // Font type
@@ -202,7 +147,7 @@ int main(int argc, char* argv[]) {
         );
 
         cv::putText(
-            frame,                                              // Target image
+            textRectangle,                                              // Target image
             "Decentered: " + std::to_string(decenteredPixels),  // Text to be added
             cv::Point(10, 60),                                  // Position
             cv::FONT_HERSHEY_SIMPLEX,                           // Font type
@@ -215,7 +160,7 @@ int main(int argc, char* argv[]) {
         std::string fpsString = "FPS: " + std::to_string(camera.getFPS());
 
         cv::putText(
-            frame,                      // Target image
+            textRectangle,                      // Target image
             fpsString,                  // Text to be added
             cv::Point(10, 30),          // Position
             cv::FONT_HERSHEY_SIMPLEX,   // Font type
@@ -225,7 +170,9 @@ int main(int argc, char* argv[]) {
             cv::LINE_AA                 // Line type
         );
 
-        cv::imshow("Result Frame", frame);
+        cv::Mat displayImage;
+        cv::hconcat(frame, textRectangle, displayImage);
+        cv::imshow("Result Frame", displayImage);
         cv::waitKey(1);
         videoWriterResult.write(frame);
         // videoWriter.write(frame);

@@ -7,7 +7,7 @@ std::shared_ptr<spdlog::logger> Logger::logger_ = spdlog::stdout_color_mt("conso
 
 Logger::Logger(const std::string& logFileName) {
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s:%#] %v");
-    // logger_ = spdlog::basic_logger_mt("my_logger", logFileName);
+    logger_ = spdlog::basic_logger_mt("my_logger", logFileName);
     Logger::logger_->set_level(spdlog::level::info);
 }
 

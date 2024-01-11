@@ -19,6 +19,8 @@ class RoadLaneDetectorCanny {
     int getXPosition();
     int getLeftDistance();
     int getRightDistance();
+    int getLeftMidpointY();
+    int getRightMidpointY();
     std::pair<cv::Vec4f, cv::Vec4f> getLanes();
     cv::Vec4f getRightVerticalLane();
     cv::Vec4f getLeftVerticalLane();
@@ -28,9 +30,13 @@ class RoadLaneDetectorCanny {
     cv::Vec4f getRightHorizontalTopLane();
 
    private:
+    static constexpr int MIN_LANES_DISTANCE = 125;
+    static constexpr int MAX_LANES_DISTANCE = 225;
+
     cv::Mat filterEdges(const cv::Mat& edgedFrame, const cv::Mat& grayFrame);
     std::vector<cv::Vec4i> detectLines(const cv::Mat& processedFrame);
     void findLanes();
+    void findTurns();
     double calculateDecentering(const int& imageCols, const int& imageHeight);
     cv::Mat preprocessFrame(const cv::Mat& frame);
     cv::Mat cropRoiFromFrame(const cv::Mat& frame);
@@ -39,10 +45,10 @@ class RoadLaneDetectorCanny {
     void classifyHorizontalPoints(const std::vector<cv::Vec4i>& lines);
 
     bool leftVerticalLaneDetected, rightVerticalLaneDetected, leftHorizontalBottomLaneDetected, leftHorizontalTopLaneDetected, rightHorizontalBottomLaneDetected, rightHorizontalTopLaneDetected, turnLeftDetected, turnRightDetected;
-    int xPosition, frameWidth, frameHeight;
+    int xPosition, frameWidth, frameHeight, leftMidpointY, rightMidpointY;
     std::vector<cv::Point> rightPoints, leftPoints, horizontalPoints;
     cv::Vec4f leftVerticalLane, rightVerticalLane, leftHorizontalBottomLane, leftHorizontalTopLane, rightHorizontalBottomLane, rightHorizontalTopLane;
     std::vector<cv::Vec4i> leftBottomLines, rightBottomLines;
-    cv::Mat frameAfterCanny, bottomCircleMask;
+    cv::Mat frameAfterCanny, bottomCircleMask, preprocessedFrame;
     cv::Point mostDistantPointOnLeftVerticalLane, mostDistantPointOnRightVerticalLane;
 };
