@@ -13,8 +13,8 @@ RoadLaneDetectorCanny::RoadLaneDetectorCanny() : xPosition(0),
     int radius = frameWidth / 2;
     bottomCircleMask = cv::Mat::zeros(cv::Point(frameWidth, frameHeight), CV_8U);
     cv::circle(bottomCircleMask, cv::Point(frameWidth / 2, frameHeight), radius / 3.5, cv::Scalar(255), -1);
-    upperRoi = cv::Rect(0, 0, frameWidth, frameHeight * 0.60);
-    lowerRoi = cv::Rect(0, frameHeight * 0.75, frameWidth, frameHeight * 0.25);
+    upperRoi = cv::Rect(0, 0, frameWidth, frameHeight * 0.65);
+    lowerRoi = cv::Rect(0, frameHeight * 0.80, frameWidth, frameHeight * 0.20);
 }
 
 cv::Mat convertFrameToGrayscale(const cv::Mat& frame) {
@@ -164,22 +164,29 @@ void RoadLaneDetectorCanny::findRoadForwardBeyondIntersectionDetected() {
     roadForwardBeyondIntersectionDetected = leftPoints.size() && rightPoints.size();
 }
 
-void calculateIntersection(const cv::Vec4f& line, double& y, double& x) {
+void calculateIntersection(const cv::Vec4f& line, const double& y, double& x) {
     double t = (y - line[3]) / line[1];
     x = line[0] * t + line[2];
 }
 
 double RoadLaneDetectorCanny::calculateDecentering(const int& imageCols, const int& imageHeight) {
     double center_y = imageHeight * 0.5;
-    double leftX, rightX;
+    double leftX, rightX, leftXBottom, rightXBottom;
 
     calculateIntersection(leftVerticalLane, center_y, leftX);
     calculateIntersection(rightVerticalLane, center_y, rightX);
+    calculateIntersection(leftVerticalLane, imageHeight, leftXBottom);
+    calculateIntersection(rightVerticalLane, imageHeight, rightXBottom);
 
     double centerX = (leftX + rightX) / 2.0;
 
     double centerImageX = imageCols / 2.0;
     double decentering = centerX - centerImageX;
+
+    if (std::abs(leftX - rightX) > std::abs(leftXBottom - rightXBottom)) {
+        rightVerticalLaneDetected = false;
+        leftVerticalLaneDetected = false;
+    }
 
     return decentering;
 }
