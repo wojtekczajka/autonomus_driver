@@ -21,6 +21,7 @@ add_executable(autonomus_driver
     src/steering/steering_client.cpp
     src/steering/auto_pilot.cpp
     src/road_lane_detector/road_lane_detector_canny.cpp
+    src/road_sign_detector/speed_limit_detector.cpp
 )
 
 add_executable(hsvTest

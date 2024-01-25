@@ -9,6 +9,7 @@
 #include "road_lane_detector/road_lane_detector_canny.h"
 #include "steering/auto_pilot.h"
 #include "steering/steering_client.h"
+#include "road_sign_detector/speed_limit_detector.h"
 
 volatile bool shouldExit = false;
 
@@ -39,8 +40,8 @@ int main(int argc, char* argv[]) {
     int decenteredPixels;
     cv::Vec4f rightLane, leftLane, leftBottomLane, rightBottomLane, leftTopLane, rightTopLane;
 
-    int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
-    cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640 * 2, 368), true);
+    // int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
+    // cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640 * 2, 368), true);
 
     Drawer drawer;
     Logger logger;
@@ -49,7 +50,7 @@ int main(int argc, char* argv[]) {
     SteeringClient steeringClient(logger, "http://127.0.0.1:8000/control");
     RoadLaneDetectorCanny roadLaneDetectorCanny;
     AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient, distanceClient, logger);
-
+    SpeedLimitDetector speedLimitDetector;
     if (!camera.isOpened()) {
         logger.error("Couldn't open the camera.");
         return -1;
@@ -65,6 +66,7 @@ int main(int argc, char* argv[]) {
 
         cv::Mat frame = camera.getCurrentFrame();
         roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
+        speedLimitDetector.detectSpeedLimit(camera.getCurrentFrame());
         autoPilot.controlSteering();
 
         cv::Mat textRectangle = cv::Mat::zeros(frame.rows, frame.cols, frame.type());
@@ -83,8 +85,7 @@ int main(int argc, char* argv[]) {
 
         cv::Mat displayImage = drawer.concatenateFrames(frame, textRectangle);
         cv::imshow("Result Frame", displayImage);
-        cv::waitKey(1);
-        videoWriterResult.write(displayImage);
+        // videoWriterResult.write(displayImage);
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {
             break;

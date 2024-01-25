@@ -208,8 +208,8 @@ void RoadLaneDetectorCanny::processFrame(const cv::Mat& frame) {
     findLanes();
     if (rightVerticalLaneDetected && leftVerticalLaneDetected)
         xPosition = calculateDecentering(frame.cols, frame.rows);
-    findTurns();
-    findRoadForwardBeyondIntersectionDetected();
+    // findTurns();
+    // findRoadForwardBeyondIntersectionDetected();
 }
 
 cv::Vec4f RoadLaneDetectorCanny::getRightVerticalLane() {

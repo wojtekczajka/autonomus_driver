@@ -1,54 +1,45 @@
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <iostream>
 
-using namespace cv;
+void on_trackbar(int, void*) {
+    // This function will be called every time the trackbar position is changed
+}
 
 int main() {
-    // VideoCapture cap("output_video.avi");
-    VideoCapture cap(0);
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 368);
-    cap.set(cv::CAP_PROP_FPS, 15);
-    if (!cap.isOpened()) {
-        std::cerr << "Error: Could not open camera" << std::endl;
+    // Load your image
+    cv::Mat frame = cv::imread("dupa.png"); // Replace with your image path
+    if(frame.empty()) {
+        std::cerr << "Error: Image not found!" << std::endl;
         return -1;
     }
 
-    namedWindow("Video", WINDOW_AUTOSIZE);
+    // Convert to HSV color space
+    cv::Mat hsvImage;
+    cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
 
-    int minHue = 0, maxHue = 0;
-    int minSat = 0, maxSat = 0;
-    int minValue = 0, maxValue = 255;
+    // Create a window
+    cv::namedWindow("Red Color Detection", 1);
 
-    createTrackbar("Min Hue", "Video", &minHue, 255);
-    createTrackbar("Max Hue", "Video", &maxHue, 255);
-    createTrackbar("Min Saturation", "Video", &minSat, 255);
-    createTrackbar("Max Saturation", "Video", &maxSat, 255);
-    createTrackbar("Min Value", "Video", &minValue, 255);
-    createTrackbar("Max Value", "Video", &maxValue, 255);
-
-    Mat frame, hsvFrame, mask;
+    // Trackbars to adjust the range
+    int lowH = 0, highH = 180, lowS = 0, highS = 255, lowV = 0, highV = 255;
+    cv::createTrackbar("Low H", "Red Color Detection", &lowH, 180, on_trackbar);
+    cv::createTrackbar("High H", "Red Color Detection", &highH, 180, on_trackbar);
+    cv::createTrackbar("Low S", "Red Color Detection", &lowS, 255, on_trackbar);
+    cv::createTrackbar("High S", "Red Color Detection", &highS, 255, on_trackbar);
+    cv::createTrackbar("Low V", "Red Color Detection", &lowV, 255, on_trackbar);
+    cv::createTrackbar("High V", "Red Color Detection", &highV, 255, on_trackbar);
 
     while (true) {
-        cap >> frame;
-        std::vector<cv::Mat> channels;
-        cv::split(frame, channels);
-        for (int i = 0; i < 3; i++) {
-            cv::equalizeHist(channels[i], channels[i]);
-        }
-        
-        cv::merge(channels, frame);
-        cvtColor(frame, hsvFrame, COLOR_BGR2HSV);
-        inRange(hsvFrame, Scalar(minHue, minSat, minValue), Scalar(maxHue, maxSat, maxValue), mask);
-        Mat result;
-        bitwise_and(frame, frame, result, mask);
-        imshow("Video", result);
-        if (waitKey(0) == 'q') {
+        cv::Mat mask;
+        cv::inRange(hsvImage, cv::Scalar(lowH, lowS, lowV), cv::Scalar(highH, highS, highV), mask);
+
+        cv::imshow("Red Color Detection", mask);
+
+        // Wait for a key press for 30ms
+        if (cv::waitKey(30) >= 0) {
             break;
         }
     }
-    cap.release();
-    destroyAllWindows();
 
     return 0;
 }
