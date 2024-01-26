@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 
         cv::Mat frame = camera.getCurrentFrame();
         roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
-        speedLimitDetector.detectSpeedLimit(camera.getCurrentFrame());
+        // speedLimitDetector.detectSpeedLimit(camera.getCurrentFrame());
         autoPilot.controlSteering();
 
         cv::Mat textRectangle = cv::Mat::zeros(frame.rows, frame.cols, frame.type());

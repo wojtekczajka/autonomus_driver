@@ -39,7 +39,7 @@ target_link_libraries(photographer ${OpenCV_LIBS})
 
 target_link_libraries(hsvTest ${OpenCV_LIBS})
 
-target_link_libraries(autonomus_driver ${OpenCV_LIBS} cpr::cpr)
+target_link_libraries(autonomus_driver ${OpenCV_LIBS} cpr::cpr -llept -ltesseract)
 
 target_include_directories(autonomus_driver PRIVATE
     include     
