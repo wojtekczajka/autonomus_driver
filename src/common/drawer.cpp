@@ -11,6 +11,23 @@ void Drawer::drawLanes(cv::Mat& frame, const cv::Vec4f& rightLane, const cv::Vec
     }
 }
 
+void Drawer::drawTextAboveBox(cv::Mat& frame, const cv::Rect& boundingBox, const std::string& text) {
+    int fontFace = cv::FONT_HERSHEY_SIMPLEX;
+    double fontScale = 0.5;
+    int thickness = 2;
+    int baseline = 0;
+
+    cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
+    baseline += thickness;
+
+    cv::Point textOrigin(boundingBox.x + (boundingBox.width - textSize.width) / 2,
+                         boundingBox.y - baseline - 1);  // Position text slightly above the rectangle
+
+    cv::putText(frame, text, textOrigin, fontFace, fontScale,
+                cv::Scalar(0, 255, 0), thickness);
+    cv::rectangle(frame, boundingBox, cv::Scalar(255, 0, 0), 2);
+}
+
 cv::Mat Drawer::updateFrame(const cv::Mat& frame, const std::map<std::string, std::string>& updates) {
     for (const auto& [key, value] : updates) {
         updateText(key, value);

@@ -7,7 +7,7 @@ void on_trackbar(int, void*) {
 
 int main() {
     // Load your image
-    cv::Mat frame = cv::imread("dupa.png"); // Replace with your image path
+    cv::Mat frame = cv::imread("raw.png"); // Replace with your image path
     if(frame.empty()) {
         std::cerr << "Error: Image not found!" << std::endl;
         return -1;

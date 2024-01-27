@@ -3,11 +3,13 @@
 #include "common/logger.h"
 #include "distance/distance_client.h"
 #include "road_lane_detector/road_lane_detector_canny.h"
+#include "road_sign_detector/speed_limit_detector.h"
+#include "road_sign_detector/mandatory_sign_detector.h"
 #include "steering/steering_client.h"
 
 class AutoPilot {
    public:
-    AutoPilot(RoadLaneDetectorCanny& detector, ISteeringClient& steeringClient, IDistanceClient& distanceClient, Logger& logger);
+    AutoPilot(SpeedLimitDetector& speedLimitDetector, MandatorySignDetector& mandatorySignDetector, RoadLaneDetectorCanny& detector, ISteeringClient& steeringClient, IDistanceClient& distanceClient, Logger& logger);
 
     void controlSteering();
     std::string getCurrentAction();
@@ -32,6 +34,8 @@ class AutoPilot {
     ISteeringClient& steeringClient;
     IDistanceClient& distanceClient;
     Logger& logger;
+    MandatorySignDetector& mandatorySignDetector;
+    SpeedLimitDetector& speedLimitDetector;
     std::string currentAction;
     NextAction nextAction;
     int counter = 0;

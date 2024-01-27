@@ -10,7 +10,7 @@
 #include "steering/auto_pilot.h"
 #include "steering/steering_client.h"
 #include "road_sign_detector/speed_limit_detector.h"
-#include "road_sign_detector/turn_sign_detector.h"
+#include "road_sign_detector/mandatory_sign_detector.h"
 
 volatile bool shouldExit = false;
 
@@ -50,9 +50,9 @@ int main(int argc, char* argv[]) {
     DistanceClient distanceClient(logger, "http://127.0.0.1:8000/distance");
     SteeringClient steeringClient(logger, "http://127.0.0.1:8000/control");
     RoadLaneDetectorCanny roadLaneDetectorCanny;
-    AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient, distanceClient, logger);
     SpeedLimitDetector speedLimitDetector;
-    TurnSignDetector turnSignDetector;
+    MandatorySignDetector mandatorySignDetector;
+    AutoPilot autoPilot(speedLimitDetector, mandatorySignDetector, roadLaneDetectorCanny, steeringClient, distanceClient, logger);
     if (!camera.isOpened()) {
         logger.error("Couldn't open the camera.");
         return -1;
@@ -67,12 +67,16 @@ int main(int argc, char* argv[]) {
         }
 
         cv::Mat frame = camera.getCurrentFrame();
-        roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
-        // speedLimitDetector.detectSpeedLimit(camera.getCurrentFrame());
-        turnSignDetector.detectTurnSign(camera.getCurrentFrame());
+        roadLaneDetectorCanny.processFrame(frame);
+        speedLimitDetector.detectSpeedLimit(frame);
+        mandatorySignDetector.detectTurnSign(frame);
         autoPilot.controlSteering();
 
         cv::Mat textRectangle = cv::Mat::zeros(frame.rows, frame.cols, frame.type());
+        if(mandatorySignDetector.isSignDetected()) 
+            drawer.drawTextAboveBox(frame, mandatorySignDetector.getSignPosition(), mandatorySignDetector.getSignTypeStr());
+        if(speedLimitDetector.isSignDetected()) 
+            drawer.drawTextAboveBox(frame, speedLimitDetector.getSignPosition(), speedLimitDetector.getSpeedLimitValueStr());
         drawer.drawLanes(frame, roadLaneDetectorCanny.getRightVerticalLane(), roadLaneDetectorCanny.getLeftVerticalLane(),
                          roadLaneDetectorCanny.isRightVerticalLaneDetected(), roadLaneDetectorCanny.isLeftVerticalLaneDetected());
         drawer.updateText("turnRightDetected", std::to_string(roadLaneDetectorCanny.isTurnRightDetected()));

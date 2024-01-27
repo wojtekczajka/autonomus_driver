@@ -16,13 +16,14 @@ add_executable(autonomus_driver
     src/common/drawer.cpp
     src/common/config_parser.cpp
     src/common/logger.cpp
+    src/common/color_extractor.cpp
     src/camera/camera.cpp
     src/distance/distance_client.cpp
     src/steering/steering_client.cpp
     src/steering/auto_pilot.cpp
     src/road_lane_detector/road_lane_detector_canny.cpp
     src/road_sign_detector/speed_limit_detector.cpp
-    src/road_sign_detector/turn_sign_detector.cpp
+    src/road_sign_detector/mandatory_sign_detector.cpp
 )
 
 add_executable(hsvTest

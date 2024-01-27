@@ -9,10 +9,18 @@ class SpeedLimitDetector {
    public:
     SpeedLimitDetector();
     ~SpeedLimitDetector();
-    int detectSpeedLimit(const cv::Mat& frame);
-    void detectRedCircles(const cv::Mat& frame);
+    void detectSpeedLimit(const cv::Mat& frame);
+    bool isSignDetected();
+    cv::Rect getSignPosition();
+    int getSpeedLimitValue();
+    std::string getSpeedLimitValueStr();
 
    private:
+    bool signDetected;
+    cv::Rect signPosition;
+    int speedLimitValue;
+    char* text;
     tesseract::TessBaseAPI* tessApi;
-    int recognizeSpeed(const cv::Mat& frame, const cv::Rect& rect);
+    int recognizeSpeed(const cv::Mat& frame);
+    std::vector<std::vector<cv::Point>> contours;
 };
