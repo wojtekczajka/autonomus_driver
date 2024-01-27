@@ -43,6 +43,7 @@ void SpeedLimitDetector::detectRedCircles(const cv::Mat& frame) {
         // Set a threshold for circularity
         if (circularity > 0.7 && area > 2000) { // you can adjust this threshold
             cv::Rect boundingRect = cv::boundingRect(contours[i]);
+            cv::Point center = (boundingRect.br() + boundingRect.tl()) * 0.5;
             int radius = boundingRect.width / 2;
             int detectedSpeed = recognizeSpeed(frame, boundingRect);
             if (detectedSpeed % 10 == 0 && detectedSpeed >= 10 && detectedSpeed <= 140) {
@@ -59,21 +60,11 @@ void SpeedLimitDetector::detectRedCircles(const cv::Mat& frame) {
     
 }
 
-inline void ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }));
-}
-
-inline void rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }).base(), s.end());
-}
-
 int SpeedLimitDetector::recognizeSpeed(const cv::Mat& frame, const cv::Rect& rect) {
     cv::Mat roi = frame(rect);
-    tessApi->SetImage(roi.data, roi.cols, roi.rows, 3, roi.step);
+    cv::Mat grayRoi;
+    cv::cvtColor(roi, grayRoi, cv::COLOR_BGR2GRAY);
+    tessApi->SetImage(grayRoi.data, grayRoi.cols, grayRoi.rows, 1, grayRoi.step);
     const char* text = tessApi->GetUTF8Text();
     if (text == nullptr)
         return 0;

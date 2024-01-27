@@ -10,6 +10,7 @@
 #include "steering/auto_pilot.h"
 #include "steering/steering_client.h"
 #include "road_sign_detector/speed_limit_detector.h"
+#include "road_sign_detector/turn_sign_detector.h"
 
 volatile bool shouldExit = false;
 
@@ -51,6 +52,7 @@ int main(int argc, char* argv[]) {
     RoadLaneDetectorCanny roadLaneDetectorCanny;
     AutoPilot autoPilot(roadLaneDetectorCanny, steeringClient, distanceClient, logger);
     SpeedLimitDetector speedLimitDetector;
+    TurnSignDetector turnSignDetector;
     if (!camera.isOpened()) {
         logger.error("Couldn't open the camera.");
         return -1;
@@ -67,6 +69,7 @@ int main(int argc, char* argv[]) {
         cv::Mat frame = camera.getCurrentFrame();
         roadLaneDetectorCanny.processFrame(camera.getCurrentFrame());
         // speedLimitDetector.detectSpeedLimit(camera.getCurrentFrame());
+        turnSignDetector.detectTurnSign(camera.getCurrentFrame());
         autoPilot.controlSteering();
 
         cv::Mat textRectangle = cv::Mat::zeros(frame.rows, frame.cols, frame.type());
