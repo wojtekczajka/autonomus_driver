@@ -25,7 +25,7 @@ void SpeedLimitDetector::detectSpeedLimit(const cv::Mat& frame) {
         double perimeter = cv::arcLength(contours[i], true);
         double circularity = 4 * CV_PI * area / (perimeter * perimeter);
 
-        if (circularity > 0.7 && area > 2000) { // you can adjust this threshold
+        if (circularity > 0.7 && area > 2000) { 
             signPosition = cv::boundingRect(contours[i]);
             speedLimitValue = recognizeSpeed(frame(signPosition));
             if (speedLimitValue % 10 == 0 && speedLimitValue >= 10 && speedLimitValue <= 140) {

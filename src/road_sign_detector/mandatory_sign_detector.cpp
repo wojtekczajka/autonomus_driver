@@ -24,7 +24,7 @@ void MandatorySignDetector::detectTurnSign(const cv::Mat& frame) {
         double area = cv::contourArea(contours[i]);
         double perimeter = cv::arcLength(contours[i], true);
         double circularity = 4 * CV_PI * area / (perimeter * perimeter);
-        if (circularity > 0.7 && area > 2000) {  // you can adjust this threshold
+        if (circularity > 0.7 && area > 2000) {  
             signPosition = cv::boundingRect(contours[i]);
             signType = classifyArrow(contours[i]);
             signDetected = true;
