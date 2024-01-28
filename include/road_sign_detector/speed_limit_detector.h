@@ -2,6 +2,7 @@
 
 #include <leptonica/allheaders.h>
 #include <tesseract/baseapi.h>
+#include <memory.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -19,8 +20,8 @@ class SpeedLimitDetector {
     bool signDetected;
     cv::Rect signPosition;
     int speedLimitValue;
-    char* text;
-    tesseract::TessBaseAPI* tessApi;
+    std::unique_ptr<char[]> text;
+    std::unique_ptr<tesseract::TessBaseAPI> tessApi;
     int recognizeSpeed(const cv::Mat& frame);
     std::vector<std::vector<cv::Point>> contours;
 };

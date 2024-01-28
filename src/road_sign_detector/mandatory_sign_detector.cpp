@@ -5,6 +5,7 @@ MandatorySignDetector::MandatorySignDetector() { }
 
 MandatorySignDetector::TurnSignType MandatorySignDetector::classifyArrow(const std::vector<cv::Point>& contour) {
     cv::Moments m = cv::moments(contour, true);
+    std::cout << m.mu11 << std::endl;
     if (m.mu11 <= MandatorySignDetector::mu11_THRESHOLD_LEFT) {
         return MandatorySignDetector::TurnSignType::TURN_LEFT;
     } else if (m.mu11 > MandatorySignDetector::mu11_THRESHOLD_LEFT && m.mu11 <= MandatorySignDetector::mu11_THRESHOLD_RIGHT) {
@@ -14,8 +15,8 @@ MandatorySignDetector::TurnSignType MandatorySignDetector::classifyArrow(const s
     }
 }
 
-void MandatorySignDetector::detectTurnSign(const cv::Mat& frame) {
-
+void MandatorySignDetector::detectMandatorySign(const cv::Mat& frame) {
+    cv::imwrite("raw.png", frame);
     cv::Mat blueMask = ColorExtractor::detectBlueColor(frame);
     contours.clear();
     cv::findContours(blueMask, contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);

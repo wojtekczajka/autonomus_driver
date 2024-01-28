@@ -24,6 +24,7 @@ add_executable(autonomus_driver
     src/road_lane_detector/road_lane_detector_canny.cpp
     src/road_sign_detector/speed_limit_detector.cpp
     src/road_sign_detector/mandatory_sign_detector.cpp
+    src/traffic_light_detector/traffic_light_detector.cpp
 )
 
 add_executable(hsvTest

@@ -26,3 +26,16 @@ cv::Mat ColorExtractor::detectRedColor(const cv::Mat& frame) {
     return redMask;
 }
 
+cv::Mat ColorExtractor::detectBlackColor(const cv::Mat& frame) {
+    cv::Mat hsvImage;
+    cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
+
+    cv::Mat blackMask;
+    cv::inRange(hsvImage, lowerBlack, upperBlack, blackMask);
+    
+    cv::morphologyEx(blackMask, blackMask, cv::MORPH_OPEN, cv::Mat());
+    cv::morphologyEx(blackMask, blackMask, cv::MORPH_CLOSE, cv::Mat());
+
+    return blackMask;
+}
+

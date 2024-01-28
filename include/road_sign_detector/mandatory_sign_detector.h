@@ -11,7 +11,7 @@ class MandatorySignDetector {
     };
 
     MandatorySignDetector();
-    void detectTurnSign(const cv::Mat& frame);
+    void detectMandatorySign(const cv::Mat& frame);
     bool isSignDetected();
     TurnSignType getSignType();
     std::string getSignTypeStr();
@@ -19,7 +19,7 @@ class MandatorySignDetector {
 
    private:
     static constexpr int mu11_THRESHOLD_LEFT = 85000;
-    static constexpr int mu11_THRESHOLD_RIGHT = 180000;
+    static constexpr int mu11_THRESHOLD_RIGHT = 185000;
 
     bool signDetected;
     cv::Rect signPosition;

@@ -1,18 +1,16 @@
 #include "road_sign_detector/speed_limit_detector.h"
 #include "common/color_extractor.h"
 
-SpeedLimitDetector::SpeedLimitDetector() {
-    tessApi = new tesseract::TessBaseAPI();
+SpeedLimitDetector::SpeedLimitDetector()
+    : tessApi(std::make_unique<tesseract::TessBaseAPI>()) {
     tessApi->Init(NULL, "eng", tesseract::OEM_LSTM_ONLY);
     tessApi->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
     tessApi->SetVariable("user_defined_dpi", "70");
 }
 
 SpeedLimitDetector::~SpeedLimitDetector() {
-    tessApi->End();
-    delete tessApi;
-    if (text)
-        delete[] text;
+    if (tessApi) 
+        tessApi->End();
 }
 
 void SpeedLimitDetector::detectSpeedLimit(const cv::Mat& frame) {
@@ -41,11 +39,11 @@ int SpeedLimitDetector::recognizeSpeed(const cv::Mat& frame) {
     cv::Mat grayRoi;
     cv::cvtColor(frame, grayRoi, cv::COLOR_BGR2GRAY);
     tessApi->SetImage(grayRoi.data, grayRoi.cols, grayRoi.rows, 1, grayRoi.step);
-    text = tessApi->GetUTF8Text();
+    text = std::unique_ptr<char[]>(tessApi->GetUTF8Text());
     if (text == nullptr)
         return 0;
-    int num = atoi(text);
-    return num;
+    int speed = atoi(text.get());
+    return speed;
 }
 
 bool SpeedLimitDetector::isSignDetected() {
