@@ -2,6 +2,7 @@
 #include <csignal>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <future>
 
 #include "camera/camera.h"
 #include "common/drawer.h"
@@ -54,10 +55,18 @@ int main(int argc, char* argv[]) {
         }
 
         cv::Mat frame = camera.getCurrentFrame();
-        roadLaneDetectorCanny.processFrame(frame);
-        speedLimitDetector.detectSpeedLimit(frame);
-        mandatorySignDetector.detectMandatorySign(frame);
-        trafficLightDetector.detectTrafficLight(frame);
+        // Start tasks in parallel
+        auto futureRoadLane = std::async(std::launch::async, [&] { roadLaneDetectorCanny.processFrame(frame); });
+        auto futureSpeedLimit = std::async(std::launch::async, [&] { speedLimitDetector.detectSpeedLimit(frame); });
+        auto futureMandatorySign = std::async(std::launch::async, [&] { mandatorySignDetector.detectMandatorySign(frame); });
+        auto futureTrafficLight = std::async(std::launch::async, [&] { trafficLightDetector.detectTrafficLight(frame); });
+
+        // Wait for the tasks to complete
+        futureRoadLane.get();
+        futureSpeedLimit.get();
+        futureMandatorySign.get();
+        futureTrafficLight.get();
+
         autoPilot.controlSteering();
 
         cv::Mat textRectangle = cv::Mat::zeros(frame.rows, frame.cols, frame.type());

@@ -3,7 +3,7 @@
 #include "camera/camera.h"
 
 int main() {
-    int num = 108;
+    int num = 43;
     Logger logger;
     Camera camera(logger);
 
@@ -29,7 +29,7 @@ int main() {
         std::cin >> saveFrameOption;
 
         if (saveFrameOption == "yes") {
-            std::string frameFilename("frame" + std::to_string(num) + ".jpg");
+            std::string frameFilename("test_data" + std::to_string(num) + ".jpg");
             cv::imwrite(frameFilename, frame);  
 
             std::cout << num << std::endl;
