@@ -16,11 +16,9 @@ MandatorySignDetector::TurnSignType MandatorySignDetector::classifyArrow(const s
 }
 
 void MandatorySignDetector::detectMandatorySign(const cv::Mat& frame) {
-    cv::imwrite("raw.png", frame);
     cv::Mat blueMask = ColorExtractor::detectBlueColor(frame);
     contours.clear();
     cv::findContours(blueMask, contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
-    cv::Mat temp(frame);
     for (size_t i = 0; i < contours.size(); i++) {
         double area = cv::contourArea(contours[i]);
         double perimeter = cv::arcLength(contours[i], true);

@@ -76,6 +76,8 @@ int main(int argc, char* argv[]) {
         autoPilot.controlSteering();
 
         cv::Mat textRectangle = cv::Mat::zeros(frame.rows, frame.cols, frame.type());
+        if (trafficLightDetector.isTrafficLightDetected())
+            drawer.drawTextAboveBox(frame, trafficLightDetector.getTrafficLightPosition(), trafficLightDetector.getTrafficLightStr());
         if(mandatorySignDetector.isSignDetected()) 
             drawer.drawTextAboveBox(frame, mandatorySignDetector.getSignPosition(), mandatorySignDetector.getSignTypeStr());
         if(speedLimitDetector.isSignDetected()) 

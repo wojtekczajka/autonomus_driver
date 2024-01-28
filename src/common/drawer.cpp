@@ -18,7 +18,6 @@ void Drawer::drawTextAboveBox(cv::Mat& frame, const cv::Rect& boundingBox, const
     int baseline = 0;
 
     cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
-    baseline += thickness;
 
     cv::Point textOrigin(boundingBox.x + (boundingBox.width - textSize.width) / 2,
                          boundingBox.y - baseline - 1);  // Position text slightly above the rectangle

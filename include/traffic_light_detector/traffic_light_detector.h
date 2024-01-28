@@ -6,20 +6,25 @@ class TrafficLightDetector {
    public:
     enum TrafficLight {
         TRAFFIC_LIGHT_GREEN,
-        TRAFFIC_LIGHT_YELOW,
+        TRAFFIC_LIGHT_YELLOW,
         TRAFFIC_LIGHT_RED,
     };
 
     TrafficLightDetector();
     void detectTrafficLight(const cv::Mat& frame);
-    bool isTrafficLight();
+    bool isTrafficLightDetected();
     TrafficLight getTrafficLight();
     std::string getTrafficLightStr();
-    cv::Rect getSignPosition();
+    cv::Rect getTrafficLightPosition();
 
    private:
-    bool signDetected;
-    cv::Rect signPosition;
+    bool trafficLightDetected;
+    cv::Rect trafficLightPosition;
     TrafficLight trafficLight;
     std::vector<std::vector<cv::Point>> contours;
+
+    bool detectRedLight(const cv::Mat& croppedContour, const cv::Rect& rect, const cv::Rect& part);
+    bool detectGreenLight(const cv::Mat& croppedContour, const cv::Rect& rect, const cv::Rect& part);
+    bool detectYellowLight(const cv::Mat& croppedContour, const cv::Rect& rect, const cv::Rect& part);
+    bool isCircularAndCentered(const cv::Mat& mask, const cv::Rect& rect, double areaThreshold, const cv::Rect& part);
 };
