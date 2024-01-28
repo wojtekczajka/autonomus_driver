@@ -5,7 +5,6 @@
 TrafficLightDetector::TrafficLightDetector(){};
 
 void TrafficLightDetector::detectTrafficLight(const cv::Mat& frame) {
-    cv::imwrite("raw.png", frame);
     cv::Mat blackMask = ColorExtractor::detectBlackColor(frame);
     contours.clear();
     cv::findContours(blackMask, contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
@@ -64,7 +63,6 @@ bool TrafficLightDetector::detectYellowLight(const cv::Mat& croppedContour, cons
 
 bool TrafficLightDetector::detectGreenLight(const cv::Mat& croppedContour, const cv::Rect& rect, const cv::Rect& part) {
     cv::Mat greenMask = ColorExtractor::detectGreenColor(croppedContour);
-    cv::imshow("green", greenMask);
     return isCircularAndCentered(greenMask, rect, 175, part); // Replace 175 with your area threshold for green
 }
 
@@ -74,14 +72,12 @@ bool TrafficLightDetector::isCircularAndCentered(const cv::Mat& mask, const cv::
 
     for (const auto& contour : contours) {
         double area = cv::contourArea(contour);
-        std::cout << area << std::endl;
         if (area < areaThreshold) {
             continue;
         }
 
         double perimeter = cv::arcLength(contour, true);
         double circularity = (4 * CV_PI * area) / (perimeter * perimeter);
-        std::cout << circularity << std::endl;
         if (circularity < 0.6) {
             continue;
         }
