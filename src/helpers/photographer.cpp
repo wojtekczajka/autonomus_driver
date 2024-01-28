@@ -4,7 +4,7 @@
 
 int main() {
     int num = 108;
-    Logger logger("/dev/null");
+    Logger logger;
     Camera camera(logger);
 
     if (!camera.isOpened()) {

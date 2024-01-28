@@ -1,7 +1,7 @@
 #include "steering/auto_pilot.h"
 
-AutoPilot::AutoPilot(SpeedLimitDetector& speedLimitDetector, MandatorySignDetector& mandatorySignDetector, RoadLaneDetectorCanny& detector, ISteeringClient& steeringClient, IDistanceClient& distanceClient, Logger& logger)
-    : speedLimitDetector(speedLimitDetector), mandatorySignDetector(mandatorySignDetector), roadLaneDetector(detector), steeringClient(steeringClient), distanceClient(distanceClient), logger(logger), nextAction(NextAction::TurnLeft), turningProcedureStarted(false) {
+AutoPilot::AutoPilot(TrafficLightDetector& trafficLightDetector, SpeedLimitDetector& speedLimitDetector, MandatorySignDetector& mandatorySignDetector, RoadLaneDetectorCanny& detector, ISteeringClient& steeringClient, IDistanceClient& distanceClient, Logger& logger)
+    : trafficLightDetector(trafficLightDetector), speedLimitDetector(speedLimitDetector), mandatorySignDetector(mandatorySignDetector), roadLaneDetector(detector), steeringClient(steeringClient), distanceClient(distanceClient), logger(logger), nextAction(NextAction::TurnLeft), turningProcedureStarted(false) {
 }
 
 double AutoPilot::getDistanceToObstancle() {

@@ -30,12 +30,18 @@ class AutoPilotParameterizedTestFixture : public ::testing::TestWithParam<std::t
     MockSteeringClient mockSteeringClient;
     RoadLaneDetectorCanny roadLaneDetectorCanny;
     AutoPilot autoPilot;
+    TrafficLightDetector trafficLightDetector;
+    MandatorySignDetector mandatorySignDetector;
+    SpeedLimitDetector speedLimitDetector;
 
-    AutoPilotParameterizedTestFixture() : logger("/dev/null"),
+    AutoPilotParameterizedTestFixture() : logger(),
                                           mockDistanceClient(),
                                           mockSteeringClient(),
                                           roadLaneDetectorCanny(),
-                                          autoPilot(roadLaneDetectorCanny, mockSteeringClient, mockDistanceClient, logger) {}
+                                          trafficLightDetector(),
+                                          speedLimitDetector(),
+                                          mandatorySignDetector(),
+                                          autoPilot(trafficLightDetector, speedLimitDetector, mandatorySignDetector, roadLaneDetectorCanny, mockSteeringClient, mockDistanceClient, logger) {}
 
     void SetUp() override {
         ON_CALL(mockDistanceClient, getDistance()).WillByDefault(::testing::Return(100.0));

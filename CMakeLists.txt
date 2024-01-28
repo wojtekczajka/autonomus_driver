@@ -74,6 +74,9 @@ add_executable(
     src/distance/distance_client.cpp
     src/steering/steering_client.cpp
     src/road_lane_detector/road_lane_detector_canny.cpp
+    src/road_sign_detector/speed_limit_detector.cpp
+    src/road_sign_detector/mandatory_sign_detector.cpp
+    src/traffic_light_detector/traffic_light_detector.cpp
 )
 
 target_link_libraries(
@@ -82,6 +85,8 @@ target_link_libraries(
     GTest::gmock_main
     cpr::cpr
     ${OpenCV_LIBS}
+    -llept 
+    -ltesseract
 )
 
 target_include_directories(auto_pilot_test PRIVATE

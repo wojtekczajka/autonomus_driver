@@ -21,21 +21,6 @@ void signalHandler(int signum) {
     }
 }
 
-std::pair<cv::Point2f, cv::Point2f> vectorToLinePointss(const cv::Vec4f& vector, double min_y, double max_y) {
-    float vx = vector[0];
-    float vy = vector[1];
-    float x0 = vector[2];
-    float y0 = vector[3];
-
-    float x1 = x0 + (min_y - y0) * vx / vy;
-    float x2 = x0 + (max_y - y0) * vx / vy;
-
-    cv::Point2f startPoint(x1, min_y);
-    cv::Point2f endPoint(x2, max_y);
-
-    return std::make_pair(startPoint, endPoint);
-}
-
 int main(int argc, char* argv[]) {
     signal(SIGINT, signalHandler);
     
@@ -54,7 +39,7 @@ int main(int argc, char* argv[]) {
     SpeedLimitDetector speedLimitDetector;
     MandatorySignDetector mandatorySignDetector;
     TrafficLightDetector trafficLightDetector;
-    AutoPilot autoPilot(speedLimitDetector, mandatorySignDetector, roadLaneDetectorCanny, steeringClient, distanceClient, logger);
+    AutoPilot autoPilot(trafficLightDetector, speedLimitDetector, mandatorySignDetector, roadLaneDetectorCanny, steeringClient, distanceClient, logger);
     if (!camera.isOpened()) {
         logger.error("Couldn't open the camera.");
         return -1;
