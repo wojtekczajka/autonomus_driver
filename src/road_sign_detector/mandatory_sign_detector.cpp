@@ -1,10 +1,17 @@
 #include "road_sign_detector/mandatory_sign_detector.h"
+
 #include "common/color_extractor.h"
 
-MandatorySignDetector::MandatorySignDetector() { }
+MandatorySignDetector::MandatorySignDetector() {}
 
-MandatorySignDetector::TurnSignType MandatorySignDetector::classifyArrow(const std::vector<cv::Point>& contour) {
-    cv::Moments m = cv::moments(contour, true);
+MandatorySignDetector::TurnSignType MandatorySignDetector::classifyArrow(const cv::Mat& roi) {
+    cv::Mat resizedRoi;
+    cv::resize(roi, resizedRoi, cv::Size(64, 64));
+    cv::Moments m = cv::moments(resizedRoi, true);
+    double huMoments[7];
+    cv::HuMoments(m, huMoments);
+    std::cout << huMoments[0] << " " << huMoments[1] << " " << huMoments[2] << " " << huMoments[3] << " " << huMoments[4] << " " << huMoments[5] << " " << huMoments[6] << " " << huMoments[7] << std::endl;
+    cv::imwrite("aaa" + std::to_string(huMoments[0]) + ".png", resizedRoi);
     std::cout << m.mu11 << std::endl;
     if (m.mu11 <= MandatorySignDetector::mu11_THRESHOLD_LEFT) {
         return MandatorySignDetector::TurnSignType::TURN_LEFT;
@@ -23,9 +30,12 @@ void MandatorySignDetector::detectMandatorySign(const cv::Mat& frame) {
         double area = cv::contourArea(contours[i]);
         double perimeter = cv::arcLength(contours[i], true);
         double circularity = 4 * CV_PI * area / (perimeter * perimeter);
-        if (circularity > 0.7 && area > 2000) {  
+        std::cout << circularity << " " << area << std::endl;
+        if (circularity > 0.7 && area > 600) {
             signPosition = cv::boundingRect(contours[i]);
-            signType = classifyArrow(contours[i]);
+            cv::Mat roi = blueMask(signPosition);
+            cv::bitwise_not(roi, roi);
+            signType = classifyArrow(roi);
             signDetected = true;
             return;
         }

@@ -2,25 +2,20 @@
 #include <iostream>
 
 void on_trackbar(int, void*) {
-    // This function will be called every time the trackbar position is changed
 }
 
-int main() {
-    // Load your image
-    cv::Mat frame = cv::imread("raw.png"); // Replace with your image path
+int main(int argc, char** argv) {
+    cv::Mat frame = cv::imread(argv[1]); 
     if(frame.empty()) {
         std::cerr << "Error: Image not found!" << std::endl;
         return -1;
     }
 
-    // Convert to HSV color space
     cv::Mat hsvImage;
     cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
 
-    // Create a window
     cv::namedWindow("Red Color Detection", 1);
 
-    // Trackbars to adjust the range
     int lowH = 0, highH = 180, lowS = 0, highS = 255, lowV = 0, highV = 255;
     cv::createTrackbar("Low H", "Red Color Detection", &lowH, 180, on_trackbar);
     cv::createTrackbar("High H", "Red Color Detection", &highH, 180, on_trackbar);

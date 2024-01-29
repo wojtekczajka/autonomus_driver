@@ -24,7 +24,8 @@ class MandatorySignDetector {
     bool signDetected;
     cv::Rect signPosition;
     TurnSignType signType;
+    int counter = 0;
     std::vector<std::vector<cv::Point>> contours;
 
-    TurnSignType classifyArrow(const std::vector<cv::Point>& contour);
+    TurnSignType classifyArrow(const cv::Mat& roi);
 };
