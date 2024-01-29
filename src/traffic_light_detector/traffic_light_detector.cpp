@@ -20,14 +20,12 @@ void TrafficLightDetector::detectTrafficLight(const cv::Mat& frame) {
             rect.x + rect.width <= frame.cols &&
             rect.y + rect.height <= frame.rows &&
             rect.height >= 2 * rect.width) {
-
             cv::Mat croppedContour = frame(rect);
-
+            
             int thirdHeight = rect.height / 3;
             cv::Rect upperThird(rect.x, rect.y, rect.width, thirdHeight);
             cv::Rect middleThird(rect.x, rect.y + thirdHeight, rect.width, thirdHeight);
             cv::Rect lowerThird(rect.x, rect.y + 2 * thirdHeight, rect.width, thirdHeight);
-            
             bool redLightDetected = detectRedLight(croppedContour, rect, upperThird);
             bool yellowLightDetected = detectYellowLight(croppedContour, rect, middleThird);
             bool greenLightDetected = detectGreenLight(croppedContour, rect, lowerThird);
@@ -53,17 +51,17 @@ void TrafficLightDetector::detectTrafficLight(const cv::Mat& frame) {
 
 bool TrafficLightDetector::detectRedLight(const cv::Mat& croppedContour, const cv::Rect& rect, const cv::Rect& part) {
     cv::Mat redMask = ColorExtractor::detectRedColor(croppedContour);
-    return isCircularAndCentered(redMask, rect, 175, part); 
+    return isCircularAndCentered(redMask, rect, 75, part); 
 }
 
 bool TrafficLightDetector::detectYellowLight(const cv::Mat& croppedContour, const cv::Rect& rect, const cv::Rect& part) {
     cv::Mat yellowMask = ColorExtractor::detectYellowColor(croppedContour);
-    return isCircularAndCentered(yellowMask, rect, 175, part); // Replace 175 with your area threshold for yellow
+    return isCircularAndCentered(yellowMask, rect, 75, part); // Replace 175 with your area threshold for yellow
 }
 
 bool TrafficLightDetector::detectGreenLight(const cv::Mat& croppedContour, const cv::Rect& rect, const cv::Rect& part) {
     cv::Mat greenMask = ColorExtractor::detectGreenColor(croppedContour);
-    return isCircularAndCentered(greenMask, rect, 175, part); // Replace 175 with your area threshold for green
+    return isCircularAndCentered(greenMask, rect, 75, part); // Replace 175 with your area threshold for green
 }
 
 bool TrafficLightDetector::isCircularAndCentered(const cv::Mat& mask, const cv::Rect& rect, double areaThreshold, const cv::Rect& part) {

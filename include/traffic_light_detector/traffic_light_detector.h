@@ -5,9 +5,9 @@
 class TrafficLightDetector {
    public:
     enum TrafficLight {
-        TRAFFIC_LIGHT_GREEN,
-        TRAFFIC_LIGHT_YELLOW,
         TRAFFIC_LIGHT_RED,
+        TRAFFIC_LIGHT_YELLOW,
+        TRAFFIC_LIGHT_GREEN,
     };
 
     TrafficLightDetector();

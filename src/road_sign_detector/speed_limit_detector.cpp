@@ -1,4 +1,5 @@
 #include "road_sign_detector/speed_limit_detector.h"
+
 #include "common/color_extractor.h"
 
 SpeedLimitDetector::SpeedLimitDetector()
@@ -9,7 +10,7 @@ SpeedLimitDetector::SpeedLimitDetector()
 }
 
 SpeedLimitDetector::~SpeedLimitDetector() {
-    if (tessApi) 
+    if (tessApi)
         tessApi->End();
 }
 
@@ -22,8 +23,7 @@ void SpeedLimitDetector::detectSpeedLimit(const cv::Mat& frame) {
         double area = cv::contourArea(contours[i]);
         double perimeter = cv::arcLength(contours[i], true);
         double circularity = 4 * CV_PI * area / (perimeter * perimeter);
-
-        if (circularity > 0.7 && area > 2000) { 
+        if (circularity > 0.7 && area > 750) {
             signPosition = cv::boundingRect(contours[i]);
             speedLimitValue = recognizeSpeed(frame(signPosition));
             if (speedLimitValue % 10 == 0 && speedLimitValue >= 10 && speedLimitValue <= 140) {
@@ -42,6 +42,12 @@ int SpeedLimitDetector::recognizeSpeed(const cv::Mat& frame) {
     text = std::unique_ptr<char[]>(tessApi->GetUTF8Text());
     if (text == nullptr)
         return 0;
+    char* textPtr = text.get();
+    for (int i = 0; textPtr[i] != '\0'; i++) {
+        if (!std::isdigit(textPtr[i])) {
+            textPtr[i] = ' ';
+        }
+    }
     int speed = atoi(text.get());
     return speed;
 }
