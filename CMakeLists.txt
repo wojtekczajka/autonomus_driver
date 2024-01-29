@@ -65,7 +65,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
-                         GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8) # The commit hash for 1.10.x. Replace with the latest from: https://github.com/libcpr/cpr/releases
+                         GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8) 
 FetchContent_MakeAvailable(cpr)
 
 enable_testing()
@@ -73,10 +73,14 @@ enable_testing()
 add_executable(
     auto_pilot_test
     tests/road_lane_detector_canny_test.cpp
+    tests/speed_limit_detector_test.cpp
+    tests/mandatory_sign_detector_test.cpp
+    tests/traffic_light_detector_test.cpp
     tests/auto_pilot_test.cpp
     src/steering/auto_pilot.cpp
     src/common/config_parser.cpp
     src/common/logger.cpp
+    src/common/color_extractor.cpp
     src/distance/distance_client.cpp
     src/steering/steering_client.cpp
     src/road_lane_detector/road_lane_detector_canny.cpp
