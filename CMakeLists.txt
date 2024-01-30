@@ -3,10 +3,13 @@ project(autonomus_driver)
 
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+
 message("C++ Standard: ${CMAKE_CXX_STANDARD}")
 
 find_package(OpenCV REQUIRED)
 find_package(spdlog REQUIRED)
+# find_package(mlpack REQUIRED)
 
 file(COPY "src/camera/camera_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY "src/steering/curl_config.txt" DESTINATION ${CMAKE_BINARY_DIR})
@@ -27,8 +30,16 @@ add_executable(autonomus_driver
     src/traffic_light_detector/traffic_light_detector.cpp
 )
 
+add_executable(trainer
+    src/trainer.cpp
+)
+
 add_executable(hsvTest
     src/helpers/hsvTest.cpp
+)
+
+add_executable(hu_calculator
+    src/helpers/hu_moments_calculator.cpp
 )
 
 add_executable(photographer
@@ -38,9 +49,13 @@ add_executable(photographer
     src/common/config_parser.cpp
 )
 
+target_link_libraries(trainer ${OpenCV_LIBS} -fopenmp -larmadillo)
+
 target_link_libraries(photographer ${OpenCV_LIBS})
 
 target_link_libraries(hsvTest ${OpenCV_LIBS})
+
+target_link_libraries(hu_calculator ${OpenCV_LIBS})
 
 target_link_libraries(
     autonomus_driver
@@ -48,7 +63,9 @@ target_link_libraries(
     cpr::cpr
     -llept
     -ltesseract
-    pthread)
+    pthread
+    -fopenmp
+    -larmadillo)
 
 target_include_directories(autonomus_driver PRIVATE
     include     

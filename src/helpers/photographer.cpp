@@ -3,7 +3,7 @@
 #include "camera/camera.h"
 
 int main() {
-    int num = 43;
+    int num = 74;
     Logger logger;
     Camera camera(logger);
 

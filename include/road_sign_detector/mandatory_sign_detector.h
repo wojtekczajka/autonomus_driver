@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mlpack/core.hpp>
+#include <mlpack/methods/linear_svm/linear_svm.hpp>
 #include <opencv2/opencv.hpp>
 
 class MandatorySignDetector {
@@ -18,6 +20,7 @@ class MandatorySignDetector {
     cv::Rect getSignPosition();
 
    private:
+    mlpack::LinearSVM<> lsvm;
     static constexpr int mu11_THRESHOLD_LEFT = 85000;
     static constexpr int mu11_THRESHOLD_RIGHT = 185000;
 
