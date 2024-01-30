@@ -114,6 +114,8 @@ target_link_libraries(
     ${OpenCV_LIBS}
     -llept 
     -ltesseract
+    -fopenmp
+    -larmadillo
 )
 
 target_include_directories(auto_pilot_test PRIVATE

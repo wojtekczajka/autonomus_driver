@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
     int decenteredPixels;
     cv::Vec4f rightLane, leftLane, leftBottomLane, rightBottomLane, leftTopLane, rightTopLane;
 
-    // int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
-    // cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640 * 2, 368), true);
+    int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
+    cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640 * 2, 368), true);
 
     Drawer drawer;
     Logger logger;
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
 
         cv::Mat displayImage = drawer.concatenateFrames(frame, textRectangle);
         cv::imshow("Result Frame", displayImage);
-        // videoWriterResult.write(displayImage);
+        videoWriterResult.write(displayImage);
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {
             break;

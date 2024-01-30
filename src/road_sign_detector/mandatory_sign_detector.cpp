@@ -29,25 +29,16 @@ MandatorySignDetector::TurnSignType MandatorySignDetector::classifyArrow(const c
     cv::resize(roi, resizedRoi, cv::Size(64, 64));
     cv::Moments m = cv::moments(resizedRoi, true);
     double huMoments[7];
+    double huMomentsNormalized[7];
     cv::HuMoments(m, huMoments);
-    arma::rowvec featureVector(7);
     for (int i = 0; i < 7; ++i) {
-        featureVector(i) = (huMoments[i] - minValues[i]) / (maxValues[i] - minValues[i]);
+        huMomentsNormalized[i] = (huMoments[i] - minValues[i]) / (maxValues[i] - minValues[i]);
     }
-    std::cout << "featureVector size: " << featureVector.n_elem << std::endl;
+    arma::rowvec featureVector(huMomentsNormalized, 7);
     arma::Row<size_t> predictions;
     lsvm.Classify(featureVector.t(), predictions);
     int prediction = predictions[0];
-    std::cout << "prediction: " << prediction << std::endl;
-    cv::imwrite("aaa" + std::to_string(huMoments[0]) + ".png", resizedRoi);
-    std::cout << m.mu11 << std::endl;
-    if (m.mu11 <= MandatorySignDetector::mu11_THRESHOLD_LEFT) {
-        return MandatorySignDetector::TurnSignType::TURN_LEFT;
-    } else if (m.mu11 > MandatorySignDetector::mu11_THRESHOLD_LEFT && m.mu11 <= MandatorySignDetector::mu11_THRESHOLD_RIGHT) {
-        return MandatorySignDetector::TurnSignType::TURN_RIGHT;
-    } else {
-        return MandatorySignDetector::TurnSignType::DRIVE_FORWARD;
-    }
+    return static_cast<MandatorySignDetector::TurnSignType>(prediction);
 }
 
 void MandatorySignDetector::detectMandatorySign(const cv::Mat& frame) {
@@ -58,7 +49,6 @@ void MandatorySignDetector::detectMandatorySign(const cv::Mat& frame) {
         double area = cv::contourArea(contours[i]);
         double perimeter = cv::arcLength(contours[i], true);
         double circularity = 4 * CV_PI * area / (perimeter * perimeter);
-        std::cout << circularity << " " << area << std::endl;
         if (circularity > 0.7 && area > 600) {
             signPosition = cv::boundingRect(contours[i]);
             cv::Mat roi = blueMask(signPosition);
