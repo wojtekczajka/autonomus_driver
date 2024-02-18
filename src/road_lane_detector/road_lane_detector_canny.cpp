@@ -23,15 +23,6 @@ cv::Mat convertFrameToGrayscale(const cv::Mat& frame) {
     return grayscaleFrame;
 }
 
-void RoadLaneDetectorCanny::autoCanny(const cv::Mat& frame, double sigma) {
-    cv::Scalar v = cv::mean(frame);
-    double mean = v.val[0];
-
-    int lower = std::max(0.0, (1.0 - sigma) * mean);
-    int upper = std::min(255.0, (1.0 + sigma) * mean);
-    cv::Canny(frame, frameAfterCanny, lower, upper);
-}
-
 void fillTriangleWithZeros(cv::Mat& grayFrame, const cv::Point& point0, const cv::Point& point1, const cv::Point& point2) {
     cv::Size size = grayFrame.size();
     cv::Mat mask = cv::Mat::zeros(size, CV_8U);
@@ -47,6 +38,19 @@ cv::Mat RoadLaneDetectorCanny::cropRoiFromFrame(const cv::Mat& frame) {
     fillTriangleWithZeros(croppedFrame, cv::Point(frame.cols, frame.rows * 0.8), cv::Point(frame.cols, 0), cv::Point(frame.cols / 2, 0));
     return croppedFrame;
 }
+
+void RoadLaneDetectorCanny::autoCanny(const cv::Mat& frame, double sigma) {
+    cv::Scalar v = cv::mean(frame);
+    double mean = v.val[0];
+
+    int lower = std::max(0.0, (1.0 - sigma) * mean);
+    int upper = std::min(255.0, (1.0 + sigma) * mean);
+    cv::Canny(frame, frameAfterCanny, lower, upper);
+}
+
+
+
+
 
 float calculateAverageBrightness(const cv::Mat& grayFrame) {
     float sum = 0.0;

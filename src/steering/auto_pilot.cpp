@@ -17,12 +17,12 @@ void AutoPilot::controlSteering() {
     }
 
     int decenteredPixels = roadLaneDetector.getXPosition();
-    if (roadLaneDetector.isTurnLeftDetected()) {
-        steeringClient.turnLeft(MAX_TURN_VALUE);
-        // steeringClient.driveForward(20);
-        currentAction = "making turn left";
-        return;
-    }
+    // if (roadLaneDetector.isTurnLeftDetected()) {
+    //     steeringClient.turnLeft(MAX_TURN_VALUE);
+    //     // steeringClient.driveForward(20);
+    //     currentAction = "making turn left";
+    //     return;
+    // }
     if (roadLaneDetector.isRightVerticalLaneDetected() && roadLaneDetector.isLeftVerticalLaneDetected()) {
         if (std::abs(decenteredPixels) < MIN_DEVIATION) {
             currentAction = "correction centering";

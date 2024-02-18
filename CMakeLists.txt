@@ -64,8 +64,7 @@ target_link_libraries(
     -llept
     -ltesseract
     pthread
-    -fopenmp
-    -larmadillo)
+)
 
 target_include_directories(autonomus_driver PRIVATE
     include     
@@ -114,8 +113,6 @@ target_link_libraries(
     ${OpenCV_LIBS}
     -llept 
     -ltesseract
-    -fopenmp
-    -larmadillo
 )
 
 target_include_directories(auto_pilot_test PRIVATE

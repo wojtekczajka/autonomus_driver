@@ -1,17 +1,17 @@
 #include <chrono>
 #include <csignal>
+#include <future>
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <future>
 
 #include "camera/camera.h"
 #include "common/drawer.h"
 #include "distance/distance_client.h"
 #include "road_lane_detector/road_lane_detector_canny.h"
+#include "road_sign_detector/mandatory_sign_detector.h"
+#include "road_sign_detector/speed_limit_detector.h"
 #include "steering/auto_pilot.h"
 #include "steering/steering_client.h"
-#include "road_sign_detector/speed_limit_detector.h"
-#include "road_sign_detector/mandatory_sign_detector.h"
 #include "traffic_light_detector/traffic_light_detector.h"
 
 volatile bool shouldExit = false;
@@ -24,12 +24,12 @@ void signalHandler(int signum) {
 
 int main(int argc, char* argv[]) {
     signal(SIGINT, signalHandler);
-    
+
     int decenteredPixels;
     cv::Vec4f rightLane, leftLane, leftBottomLane, rightBottomLane, leftTopLane, rightTopLane;
 
-    int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
-    cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640 * 2, 368), true);
+    // int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
+    // cv::VideoWriter videoWriterResult("result.avi", fourcc, 15, cv::Size(640 * 2, 368), true);
 
     Drawer drawer;
     Logger logger;
@@ -55,13 +55,12 @@ int main(int argc, char* argv[]) {
         }
 
         cv::Mat frame = camera.getCurrentFrame();
-        // Start tasks in parallel
+        
         auto futureRoadLane = std::async(std::launch::async, [&] { roadLaneDetectorCanny.processFrame(frame); });
         auto futureSpeedLimit = std::async(std::launch::async, [&] { speedLimitDetector.detectSpeedLimit(frame); });
         auto futureMandatorySign = std::async(std::launch::async, [&] { mandatorySignDetector.detectMandatorySign(frame); });
         auto futureTrafficLight = std::async(std::launch::async, [&] { trafficLightDetector.detectTrafficLight(frame); });
 
-        // Wait for the tasks to complete
         futureRoadLane.get();
         futureSpeedLimit.get();
         futureMandatorySign.get();
@@ -70,12 +69,16 @@ int main(int argc, char* argv[]) {
         autoPilot.controlSteering();
 
         cv::Mat textRectangle = cv::Mat::zeros(frame.rows, frame.cols, frame.type());
-        if (trafficLightDetector.isTrafficLightDetected())
+        if (trafficLightDetector.isTrafficLightDetected()) {
             drawer.drawTextAboveBox(frame, trafficLightDetector.getTrafficLightPosition(), trafficLightDetector.getTrafficLightStr());
-        if(mandatorySignDetector.isSignDetected()) 
+            // break;
+        }
+        if (mandatorySignDetector.isSignDetected()) {
             drawer.drawTextAboveBox(frame, mandatorySignDetector.getSignPosition(), mandatorySignDetector.getSignTypeStr());
-        if(speedLimitDetector.isSignDetected()) 
+        }
+        if (speedLimitDetector.isSignDetected()) {
             drawer.drawTextAboveBox(frame, speedLimitDetector.getSignPosition(), speedLimitDetector.getSpeedLimitValueStr());
+        }
         drawer.drawLanes(frame, roadLaneDetectorCanny.getRightVerticalLane(), roadLaneDetectorCanny.getLeftVerticalLane(),
                          roadLaneDetectorCanny.isRightVerticalLaneDetected(), roadLaneDetectorCanny.isLeftVerticalLaneDetected());
         drawer.updateText("turnRightDetected", std::to_string(roadLaneDetectorCanny.isTurnRightDetected()));
@@ -91,7 +94,7 @@ int main(int argc, char* argv[]) {
 
         cv::Mat displayImage = drawer.concatenateFrames(frame, textRectangle);
         cv::imshow("Result Frame", displayImage);
-        videoWriterResult.write(displayImage);
+        // videoWriterResult.write(displayImage);
 
         if (cv::waitKey(1) == 'q' || shouldExit == true) {
             break;

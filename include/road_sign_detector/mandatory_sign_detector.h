@@ -1,7 +1,5 @@
 #pragma once
 
-#include <mlpack/core.hpp>
-#include <mlpack/methods/linear_svm/linear_svm.hpp>
 #include <opencv2/opencv.hpp>
 
 class MandatorySignDetector {
@@ -20,15 +18,14 @@ class MandatorySignDetector {
     cv::Rect getSignPosition();
 
    private:
-    mlpack::LinearSVM<> lsvm;
-    static constexpr int mu11_THRESHOLD_LEFT = 85000;
-    static constexpr int mu11_THRESHOLD_RIGHT = 185000;
 
     bool signDetected;
     cv::Rect signPosition;
     TurnSignType signType;
     int counter = 0;
     std::vector<std::vector<cv::Point>> contours;
+    std::map<TurnSignType, cv::Mat> referenceImages;
 
     TurnSignType classifyArrow(const cv::Mat& roi);
+    double compareImages(const cv::Mat& img1, const cv::Mat& img2);
 };

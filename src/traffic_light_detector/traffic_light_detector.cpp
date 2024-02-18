@@ -21,7 +21,6 @@ void TrafficLightDetector::detectTrafficLight(const cv::Mat& frame) {
             rect.y + rect.height <= frame.rows &&
             rect.height >= 2 * rect.width) {
             cv::Mat croppedContour = frame(rect);
-            
             int thirdHeight = rect.height / 3;
             cv::Rect upperThird(rect.x, rect.y, rect.width, thirdHeight);
             cv::Rect middleThird(rect.x, rect.y + thirdHeight, rect.width, thirdHeight);
